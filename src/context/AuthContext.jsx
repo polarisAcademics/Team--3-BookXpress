@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { authConfig } from '../config/auth.config';
 
 const AuthContext = createContext(null);
 
@@ -18,8 +19,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      // TODO: Implement login API call
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch(`${authConfig.api.baseUrl}${authConfig.api.endpoints.login}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -28,7 +28,8 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (!response.ok) {
-        throw new Error('Login failed');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Login failed');
       }
 
       const data = await response.json();
@@ -44,8 +45,7 @@ export const AuthProvider = ({ children }) => {
 
   const signup = async (userData) => {
     try {
-      // TODO: Implement signup API call
-      const response = await fetch('/api/auth/signup', {
+      const response = await fetch(`${authConfig.api.baseUrl}${authConfig.api.endpoints.signup}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -54,7 +54,8 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (!response.ok) {
-        throw new Error('Signup failed');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Signup failed');
       }
 
       const data = await response.json();

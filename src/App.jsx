@@ -12,6 +12,9 @@ import PopularRoutes from './components/PopularRoutes';
 import TrendingOffers from './components/TrendingOffers';
 import FloatingChatButton from './components/FloatingChatButton';
 import Footer from './components/Footer';
+import TrainStatus from './components/TrainStatus';
+import BookTickets from './components/BookTickets';
+import MyBookings from './components/MyBookings';
 
 function MainContent() {
   return (
@@ -36,18 +39,50 @@ function App() {
       <AuthProvider>
         <div className="min-h-screen bg-[#161f2e]">
           <Navbar />
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <MainContent />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
+          <div className="pt-16 pb-8">
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <MainContent />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/live-status"
+                element={
+                  <ProtectedRoute>
+                    <div className="container mx-auto px-4 py-8">
+                      <TrainStatus />
+                    </div>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/book-tickets"
+                element={
+                  <ProtectedRoute>
+                    <div className="container mx-auto px-4 py-8">
+                      <BookTickets />
+                    </div>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/my-bookings"
+                element={
+                  <ProtectedRoute>
+                    <div className="container mx-auto px-4 py-8">
+                      <MyBookings />
+                    </div>
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </div>
           <Footer />
         </div>
       </AuthProvider>

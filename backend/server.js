@@ -6,6 +6,7 @@ import authRoutes from './routes/auth.routes.js';
 import trainStatusRoute from './routes/trainStatus.js';
 import bookingsRoute from './routes/bookings.js';
 import trainsRoute from './routes/trains.js';
+import ticketRoutes from './routes/ticket.js';
 
 dotenv.config();
 
@@ -28,9 +29,10 @@ app.use(express.json({
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use(trainStatusRoute);
+app.use('/api', trainStatusRoute);
 app.use(bookingsRoute);
 app.use(trainsRoute);
+app.use('/api/tickets', ticketRoutes);
 
 // MongoDB connection with better error handling
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/bookxpress';

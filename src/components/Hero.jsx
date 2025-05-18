@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { cities } from '../data/cities';
 
 function Hero() {
   const [formData, setFormData] = useState({
@@ -9,12 +10,61 @@ function Hero() {
     quota: 'general',
   });
 
+  const [fromSuggestions, setFromSuggestions] = useState([]);
+  const [toSuggestions, setToSuggestions] = useState([]);
+  const [showFromSuggestions, setShowFromSuggestions] = useState(false);
+  const [showToSuggestions, setShowToSuggestions] = useState(false);
+  const fromRef = useRef(null);
+  const toRef = useRef(null);
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (fromRef.current && !fromRef.current.contains(event.target)) {
+        setShowFromSuggestions(false);
+      }
+      if (toRef.current && !toRef.current.contains(event.target)) {
+        setShowToSuggestions(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+
+    // Update suggestions based on input
+    if (name === 'from') {
+      const filtered = cities.filter(city => 
+        city.name.toLowerCase().includes(value.toLowerCase())
+      );
+      setFromSuggestions(filtered);
+      setShowFromSuggestions(true);
+    } else if (name === 'to') {
+      const filtered = cities.filter(city => 
+        city.name.toLowerCase().includes(value.toLowerCase())
+      );
+      setToSuggestions(filtered);
+      setShowToSuggestions(true);
+    }
+  };
+
+  const handleSuggestionClick = (city, field) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: city.name
+    }));
+    if (field === 'from') {
+      setShowFromSuggestions(false);
+    } else {
+      setShowToSuggestions(false);
+    }
   };
 
   const handleQuotaChange = (quota) => {
@@ -27,7 +77,6 @@ function Hero() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Form submitted:', formData);
-    // Add logic to search trains here
   };
 
   return (
@@ -37,7 +86,7 @@ function Hero() {
       </h2>
       <form className="max-w-5xl mx-auto bg-[#1e2535] rounded-md p-4 shadow-lg" onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-          <div>
+          <div className="relative" ref={fromRef}>
             <label htmlFor="from" className="sr-only">From</label>
             <input
               id="from"
@@ -48,8 +97,21 @@ function Hero() {
               onChange={handleChange}
               className="w-full bg-[#2a3147] text-white text-xs sm:text-sm rounded px-3 py-2 placeholder:text-[#7a8bbf]"
             />
+            {showFromSuggestions && fromSuggestions.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-[#2a3147] rounded-md shadow-lg max-h-60 overflow-auto">
+                {fromSuggestions.map((city) => (
+                  <div
+                    key={city.code}
+                    className="px-4 py-2 text-white text-sm hover:bg-[#3b63f7] cursor-pointer"
+                    onClick={() => handleSuggestionClick(city, 'from')}
+                  >
+                    {city.name} ({city.code})
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-          <div>
+          <div className="relative" ref={toRef}>
             <label htmlFor="to" className="sr-only">To</label>
             <input
               id="to"
@@ -60,6 +122,19 @@ function Hero() {
               onChange={handleChange}
               className="w-full bg-[#2a3147] text-white text-xs sm:text-sm rounded px-3 py-2 placeholder:text-[#7a8bbf]"
             />
+            {showToSuggestions && toSuggestions.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-[#2a3147] rounded-md shadow-lg max-h-60 overflow-auto">
+                {toSuggestions.map((city) => (
+                  <div
+                    key={city.code}
+                    className="px-4 py-2 text-white text-sm hover:bg-[#3b63f7] cursor-pointer"
+                    onClick={() => handleSuggestionClick(city, 'to')}
+                  >
+                    {city.name} ({city.code})
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <div>
             <label htmlFor="date" className="sr-only">Date</label>

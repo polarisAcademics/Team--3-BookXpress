@@ -13,7 +13,7 @@ const formatDate = (dateStr) => {
   return `${day}${month}${year}`;
 };
 
-router.get('/api/trainstatus', async (req, res) => {
+router.get('/trainstatus', async (req, res) => {
   const { trainNumber, date } = req.query;
   
   if (!trainNumber || !date) {

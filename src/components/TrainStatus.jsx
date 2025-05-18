@@ -13,7 +13,8 @@ function TrainStatus() {
         setLoading(true);
         
         try {
-            const response = await fetch(`/api/trainstatus?trainNumber=${trainNumber}&date=${date}`);
+            const formattedDate = date.replace(/-/g, '');
+            const response = await fetch(`/api/trainstatus?trainNumber=${trainNumber}&date=${formattedDate}`);
             const data = await response.json();
             
             if (!response.ok) {

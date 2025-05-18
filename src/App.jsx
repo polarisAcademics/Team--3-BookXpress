@@ -15,6 +15,7 @@ import Footer from './components/Footer';
 import TrainStatus from './components/TrainStatus';
 import BookTickets from './components/BookTickets';
 import MyBookings from './components/MyBookings';
+import DownloadTickets from './components/DownloadTickets';
 
 function MainContent() {
   return (
@@ -25,6 +26,7 @@ function MainContent() {
           <PNRStatus />
           <RecentSearches />
           <PopularRoutes />
+          <DownloadTickets />
         </div>
         <TrendingOffers />
       </main>

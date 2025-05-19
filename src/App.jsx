@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -17,22 +17,29 @@ import BookTickets from './components/BookTickets';
 import MyBookings from './components/MyBookings';
 
 function MainContent() {
+  const [appliedDiscount, setAppliedDiscount] = useState(null);
+
+  const handleApplyOffer = (offer) => {
+    console.log('Offer applied:', offer);
+    setAppliedDiscount(offer.discount.value);
+  };
 
   return (
     <>
-      <Hero />
+      <Hero appliedDiscount={appliedDiscount} />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 md:px-10 lg:px-16 py-10 space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <PNRStatus />
           <RecentSearches />
           <PopularRoutes />
         </div>
-        <TrendingOffers />
+        <TrendingOffers onApplyOffer={handleApplyOffer} />
       </main>
       <FloatingChatButton />
     </>
   );
 }
+
 async function random(){
   const url = 'https://indian-railway-irctc.p.rapidapi.com/api/trains-search/v1/train/12051?isH5=true&client=web';
 const options = {
@@ -52,8 +59,8 @@ try {
 	console.error(error);
 }
 }
+
 function App() {
-  random();
   return (
     <Router>
       <AuthProvider>

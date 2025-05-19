@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-function TrainList({ trains, selectedClass }) {
+function TrainList({ trains, selectedClass, appliedDiscount }) {
   const navigate = useNavigate();
 
   const handleBookNow = (train) => {
@@ -68,7 +68,16 @@ function TrainList({ trains, selectedClass }) {
             </div>
             <div className="text-right">
               <p className="text-white font-semibold">
-                ₹{train.fare[selectedClass] || train.fare['3A']}
+                {appliedDiscount ? (
+                  <>
+                    <span className="line-through text-[#7a8bbf] text-sm mr-2">
+                      ₹{train.fare[selectedClass] || train.fare['3A']}
+                    </span>
+                    ₹{Math.round((train.fare[selectedClass] || train.fare['3A']) * (1 - appliedDiscount / 100))}
+                  </>
+                ) : (
+                  `₹${train.fare[selectedClass] || train.fare['3A']}`
+                )}
               </p>
               <p className="text-[#7a8bbf] text-sm">Starting Fare</p>
             </div>

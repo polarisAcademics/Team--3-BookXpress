@@ -6,7 +6,7 @@ import TrainList from './TrainList';
 
 // const API_BASE_URL = 'http://localhost:3000'; // API call moved to Hero.jsx
 
-function Hero() {
+function Hero({ appliedDiscount }) {
   const [formData, setFormData] = useState({
     from: '',
     to: '',
@@ -226,7 +226,8 @@ function Hero() {
           <h3 className="text-white text-xl font-semibold mb-4">Search Results</h3>
            <TrainList 
              trains={searchResults} // Pass filtered results to TrainList
-             selectedClass={formData.classType || '3A'} // Pass selected class to TrainList
+             selectedClass={formData.classType || '3A'}
+             appliedDiscount={appliedDiscount}
            />
          {searchResults.length === 0 && (
             <div className="mt-4 bg-yellow-500/10 border border-yellow-500 text-yellow-500 px-4 py-3 rounded-lg">

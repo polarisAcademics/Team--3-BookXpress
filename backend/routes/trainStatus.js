@@ -43,25 +43,30 @@ router.get('/trainstatus', async (req, res) => {
     const data = await response.json();
     console.log('API Response:', data);
 
-    // Check if the API response indicates an error
-    if (data.ResponseCode !== "200") {
-      return res.status(400).json({
-        error: data.Message || 'Failed to fetch train status'
-      });
+    // Handle different response codes
+    switch (data.ResponseCode) {
+      case "200":
+        return res.json(data);
+      case "202":
+        // Server busy - send as 503 Service Unavailable
+        return res.status(503).json({
+          error: 'Server is busy. Please try again in a few moments.',
+          retryAfter: 5, // Suggest retry after 5 seconds
+          code: 'SERVER_BUSY'
+        });
+      case "204":
+        // No data found
+        return res.status(404).json({
+          error: 'No train data found for the given parameters.',
+          code: 'NO_DATA'
+        });
+      default:
+        // Any other response code
+        return res.status(400).json({
+          error: data.Message || 'Failed to fetch train status',
+          code: data.ResponseCode
+        });
     }
-
-    // Transform the response to match our frontend expectations
-    const transformedData = {
-      responseCode: data.ResponseCode,
-      startDate: data.StartDate,
-      trainNumber: data.TrainNumber,
-      currentPosition: data.CurrentPosition,
-      currentStation: data.CurrentStation,
-      trainRoute: data.TrainRoute,
-      message: data.Message
-    };
-
-    res.json(transformedData);
   } catch (err) {
     console.error('Train status API error:', err);
     res.status(500).json({ 
@@ -71,4 +76,4 @@ router.get('/trainstatus', async (req, res) => {
   }
 });
 
-export default router; 
+export default router;

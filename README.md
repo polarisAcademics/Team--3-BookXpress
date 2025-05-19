@@ -41,4 +41,4 @@ Get real-time updates on seat availability
 
 Theme: Modify src/styles/theme.css
 API Integration: Update src/services/api.js
-Branding: Replace assets in src/assets/
+Branding: Replace assets in src/assets

@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 
 // const API_BASE_URL = 'http://localhost:3000'; // API call moved to Hero.jsx
 
-function Hero({ appliedDiscount }) {
+function Hero({ appliedDiscount, onSearch }) {
   console.log('Hero rendering with appliedDiscount prop:', appliedDiscount);
   const [formData, setFormData] = useState({
     from: '',
@@ -124,6 +124,27 @@ function Hero({ appliedDiscount }) {
     setSearchResults(discountedResults);
     setShowResults(true);
     console.log('Hero search results after filtering and applying discount:', discountedResults);
+
+    // Save search to backend and update recent searches
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetch('http://localhost:3000/api/recent-searches', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          from: formData.from,
+          to: formData.to,
+          date: formData.date,
+        }),
+      }).then(() => {
+        if (onSearch) onSearch(formData);
+      });
+    } else {
+      if (onSearch) onSearch(formData);
+    }
   };
 
   const handleBookNow = (train) => {

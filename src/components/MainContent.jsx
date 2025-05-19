@@ -1,4 +1,4 @@
-import React, { useState } from 'react'; // Import useState
+import React, { useState, useCallback, useEffect } from 'react'; // Import useState, useCallback, useEffect
 import { useLocation } from 'react-router-dom';
 // Import components used in MainContent
 import Hero from './Hero';
@@ -16,6 +16,32 @@ function MainContent() {
   const [searchResults, setSearchResults] = useState([]); // State to store filtered results
   const [showResults, setShowResults] = useState(false); // State to control results display
   const [lastSearchFormData, setLastSearchFormData] = useState(null); // State to store the last search form data
+  const [recentSearches, setRecentSearches] = useState([]);
+
+  // Function to fetch recent searches from backend
+  const fetchRecentSearches = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setRecentSearches([]);
+      return;
+    }
+    try {
+      const res = await fetch('http://localhost:3000/api/recent-searches', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      setRecentSearches(data);
+    } catch {
+      setRecentSearches([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRecentSearches();
+  }, [fetchRecentSearches]);
 
   const handleApplyOffer = (offer) => {
     console.log('Offer applied:', offer);
@@ -45,8 +71,7 @@ function MainContent() {
                 if (appliedDiscount.type === 'percent') {
                    baseFare = baseFare * (1 - appliedDiscount.value / 100);
                 } else if (appliedDiscount.type === 'flat') {
-                    baseFare = baseFare - appliedDiscount.value;
-                    if (baseFare < 0) baseFare = 0;
+                    baseFare = Math.max(0, baseFare - appliedDiscount.value);
                 }
                 acc[className] = Math.round(baseFare);
                 return acc;
@@ -58,6 +83,9 @@ function MainContent() {
     setSearchResults(discountedResults);
     setShowResults(true);
     console.log('MainContent search results:', discountedResults);
+    
+    // Fetch recent searches after a new search
+    fetchRecentSearches();
   };
 
   console.log('MainContent rendering with appliedDiscount:', appliedDiscount);
@@ -81,7 +109,7 @@ function MainContent() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 md:px-10 lg:px-16 py-10 space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <PNRStatus />
-          <RecentSearches />
+          <RecentSearches searches={recentSearches} />
           <PopularRoutes />
           <DownloadTickets />
         </div>

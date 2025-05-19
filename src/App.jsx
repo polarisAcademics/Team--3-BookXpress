@@ -18,6 +18,7 @@ import MyBookings from './components/MyBookings';
 import DownloadTickets from './components/DownloadTickets';
 
 function MainContent() {
+
   return (
     <>
       <Hero />

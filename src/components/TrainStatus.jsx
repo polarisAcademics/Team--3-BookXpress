@@ -1,4 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
+
+const API_BASE_URL = 'http://localhost:3000';
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 5000; // 5 seconds
 
 function TrainStatus() {
     const [trainNumber, setTrainNumber] = useState('');
@@ -6,27 +10,92 @@ function TrainStatus() {
     const [loading, setLoading] = useState(false);
     const [trainStatus, setTrainStatus] = useState(null);
     const [error, setError] = useState('');
+    const [retryCount, setRetryCount] = useState(0);
+    const [retryTimeout, setRetryTimeout] = useState(null);
+    const [autoRetry, setAutoRetry] = useState(true);
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (retryTimeout) {
+                clearTimeout(retryTimeout);
+            }
+        };
+    }, [retryTimeout]);
+
+    const fetchTrainStatus = useCallback(async (retryAttempt = 0) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/trainstatus?trainNumber=${trainNumber}&date=${date}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+
+            if (!response.ok) {
+                // Handle server busy (503) with auto-retry
+                if (response.status === 503 && retryAttempt < MAX_RETRIES && autoRetry) {
+                    const timeoutId = setTimeout(() => {
+                        if (autoRetry) {
+                            fetchTrainStatus(retryAttempt + 1);
+                        }
+                    }, RETRY_DELAY);
+                    setRetryTimeout(timeoutId);
+                    setRetryCount(retryAttempt + 1);
+                    setError(`Server is busy. Retrying in ${RETRY_DELAY/1000} seconds... (Attempt ${retryAttempt + 1}/${MAX_RETRIES})`);
+                    return;
+                }
+                throw new Error(data.error || 'Failed to fetch train status');
+            }
+
+            setTrainStatus({
+                trainName: `Train ${data.TrainNumber}`,
+                currentStation: `data.CurrentStation?.StationName || 'N/A'`,
+                expectedArrival: data.CurrentStation?.ScheduleArrival || 'N/A',
+                delay: data.CurrentStation?.DelayInArrival || 'On Time',
+                stations: data.TrainRoute?.map(station => ({
+                    name: station.StationName,
+                    scheduledTime: station.ScheduleArrival,
+                    actualTime: station.ActualArrival,
+                    passed: station.IsDeparted === 'Yes'
+                }))
+            });
+            setError('');
+            setRetryCount(0);
+        } catch (err) {
+            console.error('Error fetching train status:', err);
+            setError(err.message);
+            setTrainStatus(null);
+        } finally {
+            if (retryCount >= MAX_RETRIES) {
+                setLoading(false);
+                setAutoRetry(false);
+            }
+        }
+    }, [trainNumber, date, autoRetry, retryCount]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         setLoading(true);
-        
-        try {
-            const formattedDate = date.replace(/-/g, '');
-            const response = await fetch(`/api/trainstatus?trainNumber=${trainNumber}&date=${formattedDate}`);
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to fetch train status');
-            }
-            
-            setTrainStatus(data);
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
+        setAutoRetry(true);
+        setRetryCount(0);
+        if (retryTimeout) {
+            clearTimeout(retryTimeout);
         }
+        await fetchTrainStatus(0);
+    };
+
+    const handleCancelRetry = () => {
+        setAutoRetry(false);
+        setLoading(false);
+        if (retryTimeout) {
+            clearTimeout(retryTimeout);
+        }
+        setError('Train status check cancelled. The server is currently busy. Please try again later.');
     };
 
     return (
@@ -74,23 +143,35 @@ function TrainStatus() {
                     </div>
                 </div>
 
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-[#4a6cf7] hover:bg-[#3b63f7] text-white py-3 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    {loading ? (
-                        <>
-                            <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
-                            <span>Checking Status...</span>
-                        </>
-                    ) : (
-                        <>
-                            <i className="fas fa-search"></i>
-                            <span>Check Status</span>
-                        </>
+                <div className="flex gap-4">
+                    <button
+                        type="submit"
+                        disabled={loading && !retryCount}
+                        className="flex-1 bg-[#4a6cf7] hover:bg-[#3b63f7] text-white py-3 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {loading && !retryCount ? (
+                            <>
+                                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+                                <span>Checking Status...</span>
+                            </>
+                        ) : (
+                            <>
+                                <i className="fas fa-search"></i>
+                                <span>Check Status</span>
+                            </>
+                        )}
+                    </button>
+
+                    {loading && retryCount > 0 && (
+                        <button
+                            type="button"
+                            onClick={handleCancelRetry}
+                            className="bg-red-500 hover:bg-red-600 text-white py-3 px-6 rounded-lg font-medium transition-colors duration-200"
+                        >
+                            Cancel Retry
+                        </button>
                     )}
-                </button>
+                </div>
             </form>
 
             {error && (
@@ -99,6 +180,11 @@ function TrainStatus() {
                         <i className="fas fa-exclamation-circle mr-2"></i>
                         {error}
                     </p>
+                    {retryCount >= MAX_RETRIES && (
+                        <p className="mt-2 text-sm">
+                            Maximum retry attempts reached. Please try again later.
+                        </p>
+                    )}
                 </div>
             )}
 
@@ -143,7 +229,7 @@ function TrainStatus() {
                                                     <span className="text-gray-400">
                                                         Scheduled: {station.scheduledTime}
                                                     </span>
-                                                    <span className={station.passed ? 'text-green-500' : 'text-gray-400'}>
+                                                    <span className={`station.passed ? 'text-green-500' : 'text-gray-400'`}>
                                                         {station.passed ? 'Departed' : 'Expected'}: {station.actualTime}
                                                     </span>
                                                 </div>
@@ -160,4 +246,4 @@ function TrainStatus() {
     );
 }
 
-export default TrainStatus; 
+export default TrainStatus;

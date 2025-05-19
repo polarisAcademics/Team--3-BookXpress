@@ -41,7 +41,7 @@ router.post('/signup', async (req, res) => {
     // Create new user
     const user = new User({
       name,
-      email,
+      email: email.trim().toLowerCase(),
       password,
     });
 
@@ -101,7 +101,7 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     // Find user
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }

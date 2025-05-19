@@ -7,7 +7,7 @@ const router = express.Router();
 let bookings = [];
 
 // Get all bookings
-router.get('/api/bookings', async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     res.json({ bookings });
   } catch (err) {
@@ -16,7 +16,7 @@ router.get('/api/bookings', async (req, res) => {
 });
 
 // Create a booking
-router.post('/api/bookings', async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const booking = {
       id: Date.now().toString(),
@@ -32,7 +32,7 @@ router.post('/api/bookings', async (req, res) => {
 });
 
 // Cancel a booking
-router.post('/api/bookings/:id/cancel', async (req, res) => {
+router.post('/:id/cancel', async (req, res) => {
   try {
     const booking = bookings.find(b => b.id === req.params.id);
     if (!booking) {

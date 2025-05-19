@@ -31,10 +31,10 @@ app.use(express.json({
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api', trainStatusRoute);
-app.use('/api', bookingsRoute);
-app.use('/api', trainsRoute);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api', pnrStatusRoute);
+app.use('/api/bookings', bookingsRoute);
+app.use('/api/trains', trainsRoute);
 
 // MongoDB connection with better error handling
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/bookxpress';

@@ -1,7 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { cities } from '../data/cities';
-import { trains } from '../data/trains';
+import { trains, additionalTrains } from '../data/trains'; // Import hardcoded train data
 import TrainList from './TrainList';
+// import { useNavigate } from 'react-router-dom'; // No longer navigating to BookTickets directly after search
+
+// const API_BASE_URL = 'http://localhost:3000'; // API call moved to Hero.jsx
 
 function Hero() {
   const [formData, setFormData] = useState({
@@ -18,8 +21,8 @@ function Hero() {
   const [showToSuggestions, setShowToSuggestions] = useState(false);
   const fromRef = useRef(null);
   const toRef = useRef(null);
-  const [searchResults, setSearchResults] = useState([]);
-  const [showResults, setShowResults] = useState(false);
+  const [searchResults, setSearchResults] = useState([]); // State to store filtered results
+  const [showResults, setShowResults] = useState(false); // State to control results display
 
   // Close suggestions when clicking outside
   useEffect(() => {
@@ -43,7 +46,7 @@ function Hero() {
       [name]: value,
     }));
 
-    // Update suggestions based on input
+    // Update suggestions based on input (still using cities data here if needed for Hero form)
     if (name === 'from') {
       const filtered = cities.filter(city => 
         city.name.toLowerCase().includes(value.toLowerCase())
@@ -80,138 +83,156 @@ function Hero() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Filter trains based on from and to cities
-    const filteredTrains = trains.filter(train => 
+
+    // Filter hardcoded trains based on from and to cities
+    const allTrains = [...trains, ...additionalTrains]; // Combine both arrays
+    const results = allTrains.filter(train => 
       train.from.toLowerCase() === formData.from.toLowerCase() &&
       train.to.toLowerCase() === formData.to.toLowerCase()
+      // Note: Date filtering is NOT implemented here based on the hardcoded data structure
+      // You would need to add date checking logic if your hardcoded data supported it.
     );
-    setSearchResults(filteredTrains);
+    setSearchResults(results);
     setShowResults(true);
+    console.log('Hero form submitted and filtered locally:', formData, results);
   };
 
   return (
-    <section className="bg-[#3b63f7] px-4 sm:px-6 md:px-10 lg:px-16 py-10">
-      <h2 className="text-white font-semibold text-center text-sm sm:text-lg md:text-xl mb-6">
-        Find and Book Train Tickets
-      </h2>
-      <form className="max-w-5xl mx-auto bg-[#1e2535] rounded-md p-4 shadow-lg" onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-          <div className="relative" ref={fromRef}>
-            <label htmlFor="from" className="sr-only">From</label>
-            <input
-              id="from"
-              name="from"
-              type="text"
-              placeholder="Enter city or station"
-              value={formData.from}
-              onChange={handleChange}
-              className="w-full bg-[#2a3147] text-white text-xs sm:text-sm rounded px-3 py-2 placeholder:text-[#7a8bbf]"
-            />
-            {showFromSuggestions && fromSuggestions.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-[#2a3147] rounded-md shadow-lg max-h-60 overflow-auto">
-                {fromSuggestions.map((city) => (
-                  <div
-                    key={city.code}
-                    className="px-4 py-2 text-white text-sm hover:bg-[#3b63f7] cursor-pointer"
-                    onClick={() => handleSuggestionClick(city, 'from')}
-                  >
-                    {city.name} ({city.code})
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="relative" ref={toRef}>
-            <label htmlFor="to" className="sr-only">To</label>
-            <input
-              id="to"
-              name="to"
-              type="text"
-              placeholder="Enter city or station"
-              value={formData.to}
-              onChange={handleChange}
-              className="w-full bg-[#2a3147] text-white text-xs sm:text-sm rounded px-3 py-2 placeholder:text-[#7a8bbf]"
-            />
-            {showToSuggestions && toSuggestions.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-[#2a3147] rounded-md shadow-lg max-h-60 overflow-auto">
-                {toSuggestions.map((city) => (
-                  <div
-                    key={city.code}
-                    className="px-4 py-2 text-white text-sm hover:bg-[#3b63f7] cursor-pointer"
-                    onClick={() => handleSuggestionClick(city, 'to')}
-                  >
-                    {city.name} ({city.code})
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          <div>
-            <label htmlFor="date" className="sr-only">Date</label>
-            <input
-              id="date"
-              name="date"
-              type="date"
-              value={formData.date}
-              onChange={handleChange}
-              className="w-full bg-[#2a3147] text-white text-xs sm:text-sm rounded px-3 py-2"
-            />
-          </div>
-          <div>
-            <label htmlFor="classType" className="sr-only">Class</label>
-            <select
-              id="classType"
-              name="classType"
-              value={formData.classType}
-              onChange={handleChange}
-              className="w-full bg-[#2a3147] text-white text-xs sm:text-sm rounded px-3 py-2"
-            >
-              <option value="" disabled>Select Class</option>
-              <option value="first">First Class</option>
-              <option value="second">Second Class</option>
-              <option value="third">Third Class</option>
-            </select>
-          </div>
+    <section className="relative bg-[#161f2e] py-20 text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold leading-tight mb-4">Find and Book Your Train Tickets</h1>
+          <p className="text-[#7a8bbf] text-lg">Search across various routes and book your journey seamlessly.</p>
         </div>
 
-        <fieldset className="mb-4 text-xs sm:text-sm text-white/80 flex flex-wrap gap-4">
-          <legend className="sr-only">Quotas</legend>
-          {[
-            { label: 'General', value: 'general' },
-            { label: 'Ladies', value: 'ladies' },
-            { label: 'Senior Citizen', value: 'senior' },
-            { label: 'Tatkal', value: 'tatkal' },
-            { label: 'Premium Tatkal', value: 'premium' },
-          ].map(({ label, value }) => (
-            <label key={value} className="flex items-center space-x-2 cursor-pointer">
-              <input
-                type="radio"
-                name="quota"
-                value={value}
-                checked={formData.quota === value}
-                onChange={() => handleQuotaChange(value)}
-                className="accent-[#3b63f7]"
-              />
-              <span>{label}</span>
-            </label>
-          ))}
-        </fieldset>
+        <div className="bg-[#1e2535] rounded-lg p-8 shadow-xl max-w-4xl mx-auto">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="relative" ref={fromRef}>
+                <label className="block text-[#7a8bbf] text-sm font-medium mb-2">From Station</label>
+                <input
+                  type="text"
+                  name="from"
+                  value={formData.from}
+                  onChange={handleChange}
+                  onFocus={() => setShowFromSuggestions(true)}
+                  placeholder="Enter city or station"
+                  className="w-full bg-[#2a3147] text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#3b63f7]"
+                  required
+                />
+                {showFromSuggestions && fromSuggestions.length > 0 && (
+                  <div className="absolute z-10 w-full bg-[#2a3147] rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
+                    {fromSuggestions.map((city) => (
+                      <div
+                        key={city.code}
+                        className="px-4 py-2 text-sm text-white hover:bg-[#3b63f7] cursor-pointer"
+                        onClick={() => handleSuggestionClick(city, 'from')}
+                      >
+                        {city.name} ({city.code})
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-        <button
-          type="submit"
-          className="w-full bg-[#3b63f7] hover:bg-[#2f54e0] transition rounded py-2 text-white text-xs sm:text-sm font-semibold flex items-center justify-center space-x-2"
-        >
-          <i className="fas fa-search"></i>
-          <span>Search Trains</span>
-        </button>
-      </form>
+              <div className="relative" ref={toRef}>
+                <label className="block text-[#7a8bbf] text-sm font-medium mb-2">To Station</label>
+                <input
+                  type="text"
+                  name="to"
+                  value={formData.to}
+                  onChange={handleChange}
+                  onFocus={() => setShowToSuggestions(true)}
+                  placeholder="Enter city or station"
+                  className="w-full bg-[#2a3147] text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#3b63f7]"
+                  required
+                />
+                {showToSuggestions && toSuggestions.length > 0 && (
+                  <div className="absolute z-10 w-full bg-[#2a3147] rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
+                    {toSuggestions.map((city) => (
+                      <div
+                        key={city.code}
+                        className="px-4 py-2 text-sm text-white hover:bg-[#3b63f7] cursor-pointer"
+                        onClick={() => handleSuggestionClick(city, 'to')}
+                      >
+                        {city.name} ({city.code})
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-[#7a8bbf] text-sm font-medium mb-2">Journey Date</label>
+                <input
+                  type="date"
+                  name="date"
+                  value={formData.date}
+                  onChange={handleChange}
+                  className="w-full bg-[#2a3147] text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#3b63f7]"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-[#7a8bbf] text-sm font-medium mb-2">Class</label>
+                <select
+                  name="classType"
+                  value={formData.classType}
+                  onChange={handleChange}
+                  className="w-full bg-[#2a3147] text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#3b63f7]"
+                  required
+                >
+                  <option value="">Select Class</option>
+                  <option value="1A">First AC (1A)</option>
+                  <option value="2A">Second AC (2A)</option>
+                  <option value="3A">Third AC (3A)</option>
+                  <option value="SL">Sleeper (SL)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-[#7a8bbf] text-sm font-medium mb-2">Quota</label>
+                <select
+                  name="quota"
+                  value={formData.quota}
+                  onChange={handleChange}
+                  className="w-full bg-[#2a3147] text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#3b63f7]"
+                >
+                  <option value="general">General</option>
+                  <option value="ladies">Ladies</option>
+                  <option value="senior">Senior Citizen</option>
+                  <option value="tatkal">Tatkal</option>
+                  <option value="premium">Premium Tatkal</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="text-center">
+              <button
+                type="submit"
+                className="bg-[#3b63f7] hover:bg-[#2f54e0] text-white font-semibold py-2 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b63f7] focus:ring-offset-2"
+              >
+                Search Trains
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {/* Display Search Results */}
       {showResults && (
         <div className="max-w-5xl mx-auto mt-8">
-          <TrainList 
-            trains={searchResults} 
-            selectedClass={formData.classType || '3A'} 
-          />
+          <h3 className="text-white text-xl font-semibold mb-4">Search Results</h3>
+           <TrainList 
+             trains={searchResults} // Pass filtered results to TrainList
+             selectedClass={formData.classType || '3A'} // Pass selected class to TrainList
+           />
+         {searchResults.length === 0 && (
+            <div className="mt-4 bg-yellow-500/10 border border-yellow-500 text-yellow-500 px-4 py-3 rounded-lg">
+                <p>No trains found for the selected route.</p>
+            </div>
+         )}
         </div>
       )}
     </section>

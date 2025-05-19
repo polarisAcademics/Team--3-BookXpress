@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { cities } from '../data/cities';
+import { cities } from '../data/cities'; // Keep cities for now if needed for suggestions in BookTickets
+
+// const API_BASE_URL = 'http://localhost:3000'; // API call moved to Hero.jsx
 
 function BookTickets() {
   const location = useLocation();
-  const { selectedTrain, selectedClass } = location.state || {};
+  // Receive selected train details from navigation state if coming from Hero search results
+  const { selectedTrain, selectedClass, searchFormData } = location.state || {};
 
   const [formData, setFormData] = useState({
     from: '',
@@ -14,6 +17,14 @@ function BookTickets() {
     quota: 'general',
   });
 
+  // Initialize form data if coming from Hero search (optional - depending on UX flow)
+  useEffect(() => {
+    if (searchFormData) {
+      setFormData(searchFormData);
+    }
+  }, [searchFormData]);
+
+  // Suggestions state and handlers - Keep if you want suggestions on this page too
   const [fromSuggestions, setFromSuggestions] = useState([]);
   const [toSuggestions, setToSuggestions] = useState([]);
   const [showFromSuggestions, setShowFromSuggestions] = useState(false);
@@ -26,20 +37,20 @@ function BookTickets() {
       [name]: value
     }));
 
-    // Update suggestions based on input
-    if (name === 'from') {
-      const filtered = cities.filter(city => 
-        city.name.toLowerCase().includes(value.toLowerCase())
-      );
-      setFromSuggestions(filtered);
-      setShowFromSuggestions(true);
-    } else if (name === 'to') {
-      const filtered = cities.filter(city => 
-        city.name.toLowerCase().includes(value.toLowerCase())
-      );
-      setToSuggestions(filtered);
-      setShowToSuggestions(true);
-    }
+    // Suggestions logic - Keep if you want suggestions on this page
+     if (name === 'from') {
+       const filtered = cities.filter(city => 
+         city.name.toLowerCase().includes(value.toLowerCase())
+       );
+       setFromSuggestions(filtered);
+       setShowFromSuggestions(true);
+     } else if (name === 'to') {
+       const filtered = cities.filter(city => 
+         city.name.toLowerCase().includes(value.toLowerCase())
+       );
+       setToSuggestions(filtered);
+       setShowToSuggestions(true);
+     }
   };
 
   const handleSuggestionClick = (city, field) => {
@@ -54,17 +65,30 @@ function BookTickets() {
     }
   };
 
-  const handleSubmit = (e) => {
+  // Handle actual booking submission
+  const handleBookingSubmit = (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    console.log('Booking form submitted:', formData);
+    // Implement booking API call here
   };
 
   return (
     <div className="max-w-4xl mx-auto">
       <h1 className="text-white text-2xl font-semibold mb-6">Book Train Tickets</h1>
-      
-      <form onSubmit={handleSubmit} className="bg-[#1e2535] rounded-lg p-6">
+
+      {/* Display selected train details if coming from search results (optional) */}
+      {selectedTrain && (
+          <div className="bg-[#2a3147] rounded-lg p-4 mb-6 text-white">
+              <h3 className="font-semibold text-lg">{selectedTrain.trainName || selectedTrain.name} ({selectedTrain.trainNumber || selectedTrain.id})</h3>
+              <p className="text-sm text-[#7a8bbf]">Route: {selectedTrain.origin || selectedTrain.from} to {selectedTrain.destination || selectedTrain.to}</p>
+              {/* Add other relevant train details */} {/* Ensure property names match the API response/train object structure */}
+          </div>
+      )}
+
+      {/* Booking Form */}
+      <form onSubmit={handleBookingSubmit} className="bg-[#1e2535] rounded-lg p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {/* From Station Input */}
           <div className="relative">
             <label className="block text-[#7a8bbf] mb-2">From Station</label>
             <input
@@ -91,6 +115,7 @@ function BookTickets() {
             )}
           </div>
 
+          {/* To Station Input */}
           <div className="relative">
             <label className="block text-[#7a8bbf] mb-2">To Station</label>
             <input
@@ -117,6 +142,7 @@ function BookTickets() {
             )}
           </div>
 
+          {/* Journey Date Input */}
           <div>
             <label className="block text-[#7a8bbf] mb-2">Journey Date</label>
             <input
@@ -129,12 +155,13 @@ function BookTickets() {
             />
           </div>
 
+          {/* Class Select */}
           <div>
             <label className="block text-[#7a8bbf] mb-2">Class</label>
             <select
               name="classType"
-              value={formData.classType}
-              onChange={handleChange}
+              value={formData.classType} // Keep classType in state for booking
+              onChange={handleChange} // Use handleChange
               required
               className="w-full bg-[#2a3147] text-white rounded px-3 py-2"
             >
@@ -147,23 +174,18 @@ function BookTickets() {
           </div>
         </div>
 
+        {/* Quota Radios */}
         <div className="mb-6">
           <label className="block text-[#7a8bbf] mb-2">Quota</label>
           <div className="flex flex-wrap gap-4">
-            {[
-              { label: 'General', value: 'general' },
-              { label: 'Ladies', value: 'ladies' },
-              { label: 'Senior Citizen', value: 'senior' },
-              { label: 'Tatkal', value: 'tatkal' },
-              { label: 'Premium Tatkal', value: 'premium' },
-            ].map(({ label, value }) => (
+            {[/* ... radio options ... */].map(({ label, value }) => (
               <label key={value} className="flex items-center space-x-2 cursor-pointer">
                 <input
                   type="radio"
                   name="quota"
-                  value={value}
+                  value={value} // Keep quota in state for booking
                   checked={formData.quota === value}
-                  onChange={() => setFormData(prev => ({ ...prev, quota: value }))}
+                  onChange={() => setFormData(prev => ({ ...prev, quota: value }))} // Keep handling quota change
                   className="accent-[#3b63f7]"
                 />
                 <span className="text-white">{label}</span>
@@ -172,11 +194,12 @@ function BookTickets() {
           </div>
         </div>
 
+        {/* Book Tickets Button */}
         <button
           type="submit"
           className="w-full bg-[#3b63f7] hover:bg-[#2f54e0] text-white py-3 rounded font-semibold"
         >
-          Search Trains
+          Book Tickets
         </button>
       </form>
     </div>

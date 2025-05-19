@@ -33,8 +33,27 @@ function MainContent() {
     </>
   );
 }
+async function random(){
+  const url = 'https://indian-railway-irctc.p.rapidapi.com/api/trains-search/v1/train/12051?isH5=true&client=web';
+const options = {
+	method: 'GET',
+	headers: {
+		'x-rapidapi-key': '9a43e9d002mshed90898683d9dd3p143a5fjsn7e1d2c2f1ab7',
+		'x-rapidapi-host': 'indian-railway-irctc.p.rapidapi.com',
+		'x-rapid-api': 'rapid-api-database'
+	}
+};
 
+try {
+	const response = await fetch(url, options);
+	const result = await response.text();
+	console.log(result);
+} catch (error) {
+	console.error(error);
+}
+}
 function App() {
+  random();
   return (
     <Router>
       <AuthProvider>

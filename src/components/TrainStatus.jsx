@@ -2,14 +2,12 @@ import React, { useState } from 'react';
 
 const API_BASE_URL = 'http://localhost:3000';
 
-// Live train status tracking component with schedule display
 function TrainStatus() {
     const [trainNumber, setTrainNumber] = useState('');
     const [loading, setLoading] = useState(false);
     const [trainStatus, setTrainStatus] = useState(null);
     const [error, setError] = useState('');
 
-    // Fetch and display train status from API
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');

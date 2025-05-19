@@ -1,6 +1,4 @@
 import React from "react";
-
-// Footer component with navigation links and app information
 function Footer() {
   return (
     <footer className="bg-[#1e2535] text-white text-sm px-4 sm:px-6 lg:px-16 py-10">
@@ -66,5 +64,4 @@ function Footer() {
     </footer>
   );
 }
-
 export default Footer;

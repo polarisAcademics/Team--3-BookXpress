@@ -1,6 +1,5 @@
 import React from "react";
 
-// Individual offer card component with apply button
 function TrendingOffer({ offer, onApplyOffer }) {
   return (
     <div className="bg-[#1e2535] rounded-md p-4 shadow-md text-xs sm:text-sm">
@@ -19,7 +18,6 @@ function TrendingOffer({ offer, onApplyOffer }) {
   );
 }
 
-// Display grid of promotional offers with discount codes
 function TrendingOffers({ onApplyOffer }) {
   const offers = [
     { 

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
-// Ticket booking form with passenger details and fare calculation
 function BookTickets() {
   const location = useLocation();
+  // Receive selected train details, class, and appliedDiscount from navigation state
   const { selectedTrain, selectedClass, appliedDiscount } = location.state || {};
 
   const [formData, setFormData] = useState({
@@ -57,7 +57,6 @@ function BookTickets() {
     }));
   };
 
-  // Calculate total fare with discount application
   const calculateFare = () => {
     if (!selectedTrain || !selectedClass) return 0;
     const baseFarePerPassenger = selectedTrain.fare[selectedClass] || selectedTrain.fare['3A'];
@@ -67,23 +66,26 @@ function BookTickets() {
       totalBaseFare = totalBaseFare * (1 - appliedDiscount.value / 100);
     } else if (appliedDiscount && appliedDiscount.type === 'flat') {
       totalBaseFare = totalBaseFare - appliedDiscount.value;
-      if (totalBaseFare < 0) totalBaseFare = 0;
+      if (totalBaseFare < 0) totalBaseFare = 0; // Ensure fare doesn't go below zero
     }
 
     return Math.round(totalBaseFare);
   };
 
   const handlePayment = () => {
+    // Implement payment gateway integration here
     console.log('Processing payment for booking:', {
       train: selectedTrain,
       passengers: formData.passengers,
       contact: formData.contact,
       fare: calculateFare(),
-      appliedDiscount: appliedDiscount
+      appliedDiscount: appliedDiscount // Include discount in log
     });
     alert('Proceeding to payment with details logged to console.');
+    // In a real app, you would integrate with a payment gateway here
   };
 
+  // Display selected train details if available
   if (!selectedTrain) {
     return (
       <div className="max-w-4xl mx-auto text-center py-12">
@@ -97,14 +99,18 @@ function BookTickets() {
     <div className="max-w-4xl mx-auto">
       <h1 className="text-white text-2xl font-semibold mb-6">Book Train Tickets</h1>
 
+      {/* Display selected train details */}
       <div className="bg-[#2a3147] rounded-lg p-4 mb-6 text-white">
         <h3 className="font-semibold text-lg">{selectedTrain.name} ({selectedTrain.id})</h3>
         <p className="text-sm text-[#7a8bbf]">Route: {selectedTrain.from} to {selectedTrain.to}</p>
         <p className="text-sm text-[#7a8bbf]">Class: {selectedClass}</p>
+        {/* Add date display if selectedTrain includes it */}
         {selectedTrain.date && <p className="text-sm text-[#7a8bbf]">Date: {selectedTrain.date}</p>}
       </div>
 
+      {/* Booking Form with Passenger/Contact Details and Fare Summary */}
       <form onSubmit={(e) => e.preventDefault()} className="bg-[#1e2535] rounded-lg p-6 space-y-6">
+        {/* Passenger Details Section */}
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-white text-lg font-semibold">Passenger Details</h3>
@@ -186,6 +192,7 @@ function BookTickets() {
           ))}
         </div>
 
+        {/* Contact Information */}
         <div className="space-y-4">
           <h3 className="text-white text-lg font-semibold">Contact Information</h3>
           <div className="bg-[#2a3147] p-4 rounded-lg space-y-4">
@@ -234,32 +241,55 @@ function BookTickets() {
           </div>
         </div>
 
+        {/* Fare Summary */}
         <div className="bg-[#2a3147] p-4 rounded-lg">
           <h3 className="text-white text-lg font-semibold mb-4">Fare Summary</h3>
           <div className="space-y-2">
             <div className="flex justify-between text-[#7a8bbf]">
               <span>Base Fare ({formData.passengers.length} passengers)</span>
-              <span>₹{selectedTrain.fare[selectedClass] * formData.passengers.length}</span>
+              {/* Display original base fare before discount */}
+              <span>₹{Math.round((selectedTrain?.fare[selectedClass] || selectedTrain?.fare['3A']) * formData.passengers.length)}</span>
             </div>
+            {/* Display discount details if applied */}
             {appliedDiscount && (
-              <div className="flex justify-between text-[#7a8bbf]">
-                <span>Discount ({appliedDiscount.code})</span>
-                <span>-₹{appliedDiscount.type === 'percent' 
-                  ? Math.round(selectedTrain.fare[selectedClass] * formData.passengers.length * (appliedDiscount.value / 100))
-                  : appliedDiscount.value}</span>
+              <div className="flex justify-between text-green-400">
+                {appliedDiscount.type === 'percent' ? (
+                  <span>Applied Discount ({appliedDiscount.value}%)</span>
+                ) : (
+                  <span>Applied Discount (Flat ₹{appliedDiscount.value})</span>
+                )}
+                {/* Calculate and display the discount amount */}
+                <span>
+                  - ₹{
+                    appliedDiscount.type === 'percent'
+                      ? Math.round(
+                          (selectedTrain?.fare[selectedClass] || selectedTrain?.fare['3A']) *
+                            formData.passengers.length *
+                            (appliedDiscount.value / 100)
+                        )
+                      : appliedDiscount.value
+                  }
+                </span>
               </div>
             )}
-            <div className="flex justify-between text-white font-semibold pt-2 border-t border-[#374151]">
-              <span>Total Fare</span>
-              <span>₹{calculateFare()}</span>
+            <div className="flex justify-between text-[#7a8bbf]">
+              <span>Service Charges</span>
+              {/* Service charge on discounted fare */}
+              <span>₹{Math.round(calculateFare() * 0.05)}</span>
+            </div>
+            <div className="border-t border-[#3b63f7] my-2"></div>
+            <div className="flex justify-between text-white font-semibold">
+              <span>Total Amount</span>
+              <span>₹{calculateFare() + Math.round(calculateFare() * 0.05)}</span>
             </div>
           </div>
         </div>
 
+        {/* Payment Button */}
         <button
-          type="submit"
+          type="button"
           onClick={handlePayment}
-          className="w-full bg-[#3b63f7] hover:bg-[#2f54e0] text-white font-semibold py-3 rounded-md transition duration-200"
+          className="w-full bg-[#3b63f7] hover:bg-[#2f54e0] text-white py-3 rounded font-semibold"
         >
           Proceed to Payment
         </button>

@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react'; // Import useState, useCallback, useEffect
 import { useLocation } from 'react-router-dom';
+// Import components used in MainContent
 import Hero from './Hero';
 import PNRStatus from './PNRStatus';
 import RecentSearches from './RecentSearches';
@@ -10,7 +11,6 @@ import Footer from './Footer'; // Footer is likely in App.jsx, but keeping impor
 import DownloadTickets from './DownloadTickets';
 import { trains, additionalTrains } from '../data/trains'; // Import hardcoded train data
 
-// Main content component that handles search functionality and displays various sections
 function MainContent() {
   const [appliedDiscount, setAppliedDiscount] = useState(null); // State for applied discount
   const [searchResults, setSearchResults] = useState([]); // State to store filtered results

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-// Main navigation component with responsive design and authentication
 function Navbar() {
   const { user, logout } = useAuth();
   const location = useLocation();

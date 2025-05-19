@@ -4,7 +4,8 @@ import { trains, additionalTrains } from '../data/trains';
 import TrainList from './TrainList';
 import { useNavigate } from 'react-router-dom';
 
-// Main search form component with city suggestions and train filtering
+// const API_BASE_URL = 'http://localhost:3000'; // API call moved to Hero.jsx
+
 function Hero({ appliedDiscount, onSearch }) {
   console.log('Hero rendering with appliedDiscount prop:', appliedDiscount);
   const [formData, setFormData] = useState({
@@ -48,6 +49,7 @@ function Hero({ appliedDiscount, onSearch }) {
       [name]: value,
     }));
 
+    // Update suggestions based on input (still using cities data here if needed for Hero form)
     if (name === 'from') {
       const filtered = cities.filter(city => 
         city.name.toLowerCase().includes(value.toLowerCase())
@@ -82,7 +84,6 @@ function Hero({ appliedDiscount, onSearch }) {
     }));
   };
 
-  // Handle form submission with discount application and search history
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Hero form submitted.', formData);
@@ -93,13 +94,15 @@ function Hero({ appliedDiscount, onSearch }) {
       train.to.toLowerCase() === formData.to.toLowerCase()
     );
 
+    // Apply discount to search results
     const discountedResults = results.map(train => {
       let discountedFare = { ...train.fare };
       if (appliedDiscount) {
+        // Only apply senior citizen discount if senior citizen quota is selected
         if (appliedDiscount.code === 'SENIOR10') {
           if (formData.quota !== 'senior') {
             console.log('Senior citizen discount not applied - quota not senior');
-            return { ...train, fare: train.fare };
+            return { ...train, fare: train.fare }; // Return original fare without discount
           }
           console.log('Senior citizen discount applied - quota is senior');
         }
@@ -122,6 +125,7 @@ function Hero({ appliedDiscount, onSearch }) {
     setShowResults(true);
     console.log('Hero search results after filtering and applying discount:', discountedResults);
 
+    // Save search to backend and update recent searches
     const token = localStorage.getItem('token');
     if (token) {
       fetch('http://localhost:3000/api/recent-searches', {
@@ -148,7 +152,7 @@ function Hero({ appliedDiscount, onSearch }) {
       state: {
         selectedTrain: train,
         selectedClass: formData.classType || '3A',
-        appliedDiscount: appliedDiscount
+        appliedDiscount: appliedDiscount // Pass appliedDiscount
       }
     });
   };
@@ -249,55 +253,53 @@ function Hero({ appliedDiscount, onSearch }) {
               </div>
               <div>
                 <label className="block text-[#7a8bbf] text-sm font-medium mb-2">Quota</label>
-                <div className="flex space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => handleQuotaChange('general')}
-                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium ${
-                      formData.quota === 'general'
-                        ? 'bg-[#3b63f7] text-white'
-                        : 'bg-[#2a3147] text-[#7a8bbf] hover:bg-[#3b63f7] hover:text-white'
-                    }`}
-                  >
-                    General
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleQuotaChange('senior')}
-                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium ${
-                      formData.quota === 'senior'
-                        ? 'bg-[#3b63f7] text-white'
-                        : 'bg-[#2a3147] text-[#7a8bbf] hover:bg-[#3b63f7] hover:text-white'
-                    }`}
-                  >
-                    Senior
-                  </button>
-                </div>
+                <select
+                  name="quota"
+                  value={formData.quota}
+                  onChange={handleChange}
+                  className="w-full bg-[#2a3147] text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#3b63f7]"
+                >
+                  <option value="general">General</option>
+                  <option value="ladies">Ladies</option>
+                  <option value="senior">Senior Citizen</option>
+                  <option value="tatkal">Tatkal</option>
+                  <option value="premium">Premium Tatkal</option>
+                </select>
               </div>
             </div>
 
-            <button
-              type="submit"
-              className="w-full bg-[#3b63f7] hover:bg-[#2f54e0] text-white py-3 rounded-md font-semibold transition duration-200"
-            >
-              Search Trains
-            </button>
+            <div className="text-center">
+              <button
+                type="submit"
+                className="bg-[#3b63f7] hover:bg-[#2f54e0] text-white font-semibold py-2 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b63f7] focus:ring-offset-2"
+              >
+                Search Trains
+              </button>
+            </div>
           </form>
         </div>
-
-        {showResults && (
-          <div className="mt-8">
-            <TrainList
-              trains={searchResults}
-              onBookNow={handleBookNow}
-              appliedDiscount={appliedDiscount}
-            />
-          </div>
-        )}
       </div>
+
+      {/* Display Search Results */}
+      {showResults && (
+        <div className="max-w-5xl mx-auto mt-8">
+          <h3 className="text-white text-xl font-semibold mb-4">Search Results</h3>
+           <TrainList 
+             trains={searchResults}
+             selectedClass={formData.classType || '3A'}
+             appliedDiscount={appliedDiscount}
+             quota={formData.quota}
+             onBookNow={handleBookNow}
+           />
+         {searchResults.length === 0 && (
+            <div className="mt-4 bg-yellow-500/10 border border-yellow-500 text-yellow-500 px-4 py-3 rounded-lg">
+                <p>No trains found for the selected route.</p>
+            </div>
+         )}
+        </div>
+      )}
     </section>
   );
 }
 
 export default Hero;
-

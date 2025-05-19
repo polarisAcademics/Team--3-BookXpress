@@ -4,11 +4,12 @@ import User from '../models/user.model.js';
 
 const router = express.Router();
 
-// User registration endpoint with validation and token generation
+// Signup route
 router.post('/signup', async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
+    // Validate required fields
     if (!name || !email || !password) {
       return res.status(400).json({ 
         message: 'Missing required fields',
@@ -20,20 +21,24 @@ router.post('/signup', async (req, res) => {
       });
     }
 
+    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({ message: 'Invalid email format' });
     }
 
+    // Validate password length
     if (password.length < 6) {
       return res.status(400).json({ message: 'Password must be at least 6 characters long' });
     }
 
+    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
+    // Create new user
     const user = new User({
       name,
       email,
@@ -42,12 +47,14 @@ router.post('/signup', async (req, res) => {
 
     await user.save();
 
+    // Generate JWT token
     const token = jwt.sign(
       { userId: user._id },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '24h' }
     );
 
+    // Generate refresh token
     const refreshToken = jwt.sign(
       { userId: user._id },
       process.env.REFRESH_TOKEN_SECRET || 'your-refresh-secret-key',
@@ -66,6 +73,7 @@ router.post('/signup', async (req, res) => {
   } catch (error) {
     console.error('Signup error:', error);
     
+    // Handle mongoose validation errors
     if (error.name === 'ValidationError') {
       return res.status(400).json({ 
         message: 'Validation error',
@@ -73,6 +81,7 @@ router.post('/signup', async (req, res) => {
       });
     }
     
+    // Handle mongoose duplicate key error
     if (error.code === 11000) {
       return res.status(400).json({ 
         message: 'Email already exists'
@@ -86,27 +95,31 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-// User authentication endpoint
+// Login route
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Find user
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
+    // Check password
     const isValidPassword = await user.comparePassword(password);
     if (!isValidPassword) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
+    // Generate JWT token
     const token = jwt.sign(
       { userId: user._id },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '24h' }
     );
 
+    // Generate refresh token
     const refreshToken = jwt.sign(
       { userId: user._id },
       process.env.REFRESH_TOKEN_SECRET || 'your-refresh-secret-key',
@@ -128,7 +141,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Token refresh endpoint for maintaining user sessions
+// Refresh token route
 router.post('/refresh-token', async (req, res) => {
   try {
     const { refreshToken } = req.body;
@@ -137,11 +150,13 @@ router.post('/refresh-token', async (req, res) => {
       return res.status(401).json({ message: 'Refresh token required' });
     }
 
+    // Verify refresh token
     const decoded = jwt.verify(
       refreshToken,
       process.env.REFRESH_TOKEN_SECRET || 'your-refresh-secret-key'
     );
 
+    // Generate new access token
     const token = jwt.sign(
       { userId: decoded.userId },
       process.env.JWT_SECRET || 'your-secret-key',

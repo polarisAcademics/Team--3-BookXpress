@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 
-// PNR status checker component with journey and passenger details
 function PNRStatus() {
   const [pnr, setPnr] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [pnrStatus, setPnrStatus] = useState(null);
 
-  // Fetch and display PNR status from API
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');

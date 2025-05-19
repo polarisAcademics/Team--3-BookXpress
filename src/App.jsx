@@ -10,15 +10,16 @@ import PNRStatus from './components/PNRStatus';
 import RecentSearches from './components/RecentSearches';
 import PopularRoutes from './components/PopularRoutes';
 import TrendingOffers from './components/TrendingOffers';
+import FloatingChatButton from './components/FloatingChatButton';
 import Footer from './components/Footer';
 import TrainStatus from './components/TrainStatus';
 import BookTickets from './components/BookTickets';
 import MyBookings from './components/MyBookings';
 
-// Main content component with search history and offers functionality
 function MainContent() {
   const [recentSearches, setRecentSearches] = useState([]);
 
+  // Function to fetch recent searches from backend
   const fetchRecentSearches = useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -42,13 +43,13 @@ function MainContent() {
   useEffect(() => {
     fetchRecentSearches();
   }, [fetchRecentSearches]);
-  
   const [appliedDiscount, setAppliedDiscount] = useState(null);
 
   const handleApplyOffer = (offer) => {
     console.log('Offer applied:', offer);
     setAppliedDiscount(offer.discount);
   };
+
 
   return (
     <>
@@ -61,11 +62,31 @@ function MainContent() {
         </div>
         <TrendingOffers onApplyOffer={handleApplyOffer} />
       </main>
+      <FloatingChatButton />
     </>
   );
 }
 
-// Main application component with routing setup
+async function random(){
+  const url = 'https://indian-railway-irctc.p.rapidapi.com/api/trains-search/v1/train/12051?isH5=true&client=web';
+const options = {
+	method: 'GET',
+	headers: {
+		'x-rapidapi-key': '9a43e9d002mshed90898683d9dd3p143a5fjsn7e1d2c2f1ab7',
+		'x-rapidapi-host': 'indian-railway-irctc.p.rapidapi.com',
+		'x-rapid-api': 'rapid-api-database'
+	}
+};
+
+try {
+	const response = await fetch(url, options);
+	const result = await response.text();
+	console.log(result);
+} catch (error) {
+	console.error(error);
+}
+}
+
 function App() {
   return (
     <Router>

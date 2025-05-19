@@ -1,7 +1,6 @@
 import { generatePDF } from '../services/pdf.js';
 import { sendMail } from '../utils/mailer.js';
 
-// Handles ticket generation and email delivery
 export const sendTicket = async (req, res) => {
   const ticket = req.body;
   const pdfPath = 'ticket.pdf';

@@ -1,4 +1,4 @@
-// Display frequently traveled routes with available train count
+
 function PopularRoutes() {
   const routes = [
     { from: "Delhi", to: "Mumbai", trains: 74 },
@@ -25,8 +25,8 @@ function PopularRoutes() {
                 <div className="text-[10px] text-white/50">{trains} trains available</div>
               </div>
             </div>
-            <a href="#" className="text-[#3b63f7] hover:underline text-xs sm:text-sm font-semibold">Book</a>
-          </li>
+                            <a href="#" className="text-[#3b63f7] hover:underline text-xs sm:text-sm font-semibold">Book</a>
+            </li>
         ))}
       </ul>
     </section>

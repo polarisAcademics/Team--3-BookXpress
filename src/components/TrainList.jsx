@@ -1,16 +1,17 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// Display list of available trains with fare details and booking options
 function TrainList({ trains, selectedClass, appliedDiscount, quota, onBookNow }) {
   const navigate = useNavigate();
 
   const handleBookNow = (train) => {
+    // Navigate to book tickets page with train details
+    // Pass selectedTrain, selectedClass, and appliedDiscount
     navigate('/book-tickets', {
       state: {
         selectedTrain: train,
         selectedClass: selectedClass,
-        appliedDiscount: appliedDiscount
+        appliedDiscount: appliedDiscount // Pass the applied discount
       }
     });
   };
@@ -110,7 +111,7 @@ function TrainList({ trains, selectedClass, appliedDiscount, quota, onBookNow })
               ))}
             </div>
             <button 
-              onClick={() => onBookNow(train)}
+              onClick={() => onBookNow(train)} // Use onBookNow prop for navigation
               className="bg-[#3b63f7] hover:bg-[#2f54e0] text-white px-4 py-2 rounded text-sm"
             >
               Book Now

@@ -1,6 +1,5 @@
 import React from 'react';
 
-// Display list of user's recent train search history
 function RecentSearches({ searches }) {
   return (
     <section className="bg-[#1e2535] rounded-md shadow-md">

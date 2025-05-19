@@ -11,10 +11,13 @@ import pnrStatusRoute from './routes/pnrStatus.js';
 import recentSearchesRoute from './routes/recentSearches.js';
 
 dotenv.config();
+
 const app = express();
 
-// Essential middleware setup
+// Middleware
 app.use(cors());
+
+// JSON parsing with error handling
 app.use(express.json({
   verify: (req, res, buf) => {
     try {
@@ -26,7 +29,7 @@ app.use(express.json({
   }
 }));
 
-// API routes configuration
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api', trainStatusRoute);
 app.use('/api/tickets', ticketRoutes);
@@ -35,7 +38,7 @@ app.use('/api/bookings', bookingsRoute);
 app.use('/api/trains', trainsRoute);
 app.use('/api/recent-searches', recentSearchesRoute);
 
-// Database connection setup
+// MongoDB connection with better error handling
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/bookxpress';
 
 mongoose.connect(MONGODB_URI, {
@@ -45,9 +48,10 @@ mongoose.connect(MONGODB_URI, {
 .then(() => console.log('Connected to MongoDB'))
 .catch((err) => {
   console.error('MongoDB connection error:', err);
-  process.exit(1);
+  process.exit(1); // Exit if cannot connect to database
 });
 
+// Handle MongoDB connection errors after initial connection
 mongoose.connection.on('error', err => {
   console.error('MongoDB connection error:', err);
 });
@@ -56,11 +60,12 @@ mongoose.connection.on('disconnected', () => {
   console.log('MongoDB disconnected. Attempting to reconnect...');
 });
 
-// Global error handler
+// Error handling middleware - MUST be after all routes
 app.use((err, req, res, next) => {
   console.error('Error:', err);
   console.error('Stack:', err.stack);
   
+  // Handle specific types of errors
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
     return res.status(400).json({ message: 'Invalid JSON format' });
   }
@@ -71,6 +76,7 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Start server with port handling
 const startServer = async (retries = 5) => {
   const PORT = process.env.PORT || 3000;
   try {

@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
-// User schema definition with authentication and search history
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -38,7 +37,7 @@ const userSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-// Password hashing middleware
+// Hash password before saving
 userSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
   
@@ -51,7 +50,7 @@ userSchema.pre('save', async function(next) {
   }
 });
 
-// Password comparison method for authentication
+// Method to compare password
 userSchema.methods.comparePassword = async function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };

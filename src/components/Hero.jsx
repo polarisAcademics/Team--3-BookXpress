@@ -6,7 +6,7 @@ import TrainList from './TrainList';
 
 // const API_BASE_URL = 'http://localhost:3000'; // API call moved to Hero.jsx
 
-function Hero({ appliedDiscount }) {
+function Hero({ onSearch, appliedDiscount }) {
   const [formData, setFormData] = useState({
     from: '',
     to: '',
@@ -95,6 +95,27 @@ function Hero({ appliedDiscount }) {
     setSearchResults(results);
     setShowResults(true);
     console.log('Hero form submitted and filtered locally:', formData, results);
+
+    // --- Add this block to save recent search ---
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetch('http://localhost:3000/api/recent-searches', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          from: formData.from,
+          to: formData.to,
+          date: formData.date,
+        }),
+      }).then(() => {
+        if (onSearch) onSearch();
+      });
+    } else {
+      if (onSearch) onSearch();
+    }
   };
 
   return (

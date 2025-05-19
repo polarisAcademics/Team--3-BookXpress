@@ -8,6 +8,7 @@ import bookingsRoute from './routes/bookings.js';
 import trainsRoute from './routes/trains.js';
 import ticketRoutes from './routes/ticket.js';
 import pnrStatusRoute from './routes/pnrStatus.js';
+import recentSearchesRoute from './routes/recentSearches.js';
 
 dotenv.config();
 
@@ -35,6 +36,7 @@ app.use('/api/tickets', ticketRoutes);
 app.use('/api', pnrStatusRoute);
 app.use('/api/bookings', bookingsRoute);
 app.use('/api/trains', trainsRoute);
+app.use('/api/recent-searches', recentSearchesRoute);
 
 // MongoDB connection with better error handling
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/bookxpress';

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -17,6 +17,32 @@ import BookTickets from './components/BookTickets';
 import MyBookings from './components/MyBookings';
 
 function MainContent() {
+  const [recentSearches, setRecentSearches] = useState([]);
+
+  // Function to fetch recent searches from backend
+  const fetchRecentSearches = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setRecentSearches([]);
+      return;
+    }
+    try {
+      const res = await fetch('http://localhost:3000/api/recent-searches', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      setRecentSearches(data);
+    } catch {
+      setRecentSearches([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRecentSearches();
+  }, [fetchRecentSearches]);
   const [appliedDiscount, setAppliedDiscount] = useState(null);
 
   const handleApplyOffer = (offer) => {
@@ -24,13 +50,14 @@ function MainContent() {
     setAppliedDiscount(offer.discount.value);
   };
 
+
   return (
     <>
-      <Hero appliedDiscount={appliedDiscount} />
+      <Hero onSearch={fetchRecentSearches} appliedDiscount={appliedDiscount} />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 md:px-10 lg:px-16 py-10 space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <PNRStatus />
-          <RecentSearches />
+          <RecentSearches searches={recentSearches} />
           <PopularRoutes />
         </div>
         <TrendingOffers onApplyOffer={handleApplyOffer} />

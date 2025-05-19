@@ -25,6 +25,14 @@ const userSchema = new mongoose.Schema({
     default: 'local',
   },
   providerId: String,
+  recentSearches: [
+    {
+      from: String,
+      to: String,
+      date: String,
+      searchedAt: { type: Date, default: Date.now }
+    }
+  ],
 }, {
   timestamps: true,
 });

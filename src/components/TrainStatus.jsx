@@ -111,22 +111,22 @@ function TrainStatus() {
                             <div className="overflow-x-auto">
                                 <table className="min-w-full text-xs text-white">
                                     <thead>
-                                        <tr>
-                                            <th className="px-2 py-1">Station</th>
-                                            <th className="px-2 py-1">Arrival</th>
-                                            <th className="px-2 py-1">Departure</th>
-                                            <th className="px-2 py-1">Distance (km)</th>
-                                            <th className="px-2 py-1">Day</th>
+                                        <tr className="bg-[#232b3a]">
+                                            <th className="px-4 py-2 text-left whitespace-nowrap">Station</th>
+                                            <th className="px-4 py-2 text-left">Arrival</th>
+                                            <th className="px-4 py-2 text-left">Departure</th>
+                                            <th className="px-4 py-2 text-left">Distance (km)</th>
+                                            <th className="px-4 py-2 text-left">Day</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {trainStatus.schedule?.map((stop, idx) => (
-                                            <tr key={idx}>
-                                                <td className="px-2 py-1">{stop.stationName} ({stop.stationCode})</td>
-                                                <td className="px-2 py-1">{stop.arrivalTime}</td>
-                                                <td className="px-2 py-1">{stop.departureTime}</td>
-                                                <td className="px-2 py-1">{stop.distance}</td>
-                                                <td className="px-2 py-1">{stop.dayCount}</td>
+                                            <tr key={idx} className={idx % 2 === 0 ? 'bg-[#232b3a]' : ''}>
+                                                <td className="px-4 py-2 text-left whitespace-nowrap">{stop.stationName} ({stop.stationCode})</td>
+                                                <td className="px-4 py-2 text-left">{stop.arrivalTime}</td>
+                                                <td className="px-4 py-2 text-left">{stop.departureTime}</td>
+                                                <td className="px-4 py-2 text-left">{stop.distance}</td>
+                                                <td className="px-4 py-2 text-left">{stop.dayCount}</td>
                                             </tr>
                                         ))}
                                     </tbody>

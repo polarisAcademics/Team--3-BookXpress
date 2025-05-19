@@ -1,12 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { cities } from '../data/cities';
-import { trains, additionalTrains } from '../data/trains'; // Import hardcoded train data
+import { trains, additionalTrains } from '../data/trains';
 import TrainList from './TrainList';
-// import { useNavigate } from 'react-router-dom'; // No longer navigating to BookTickets directly after search
+import { useNavigate } from 'react-router-dom';
 
 // const API_BASE_URL = 'http://localhost:3000'; // API call moved to Hero.jsx
 
 function Hero({ appliedDiscount }) {
+  console.log('Hero rendering with appliedDiscount prop:', appliedDiscount);
   const [formData, setFormData] = useState({
     from: '',
     to: '',
@@ -21,8 +22,10 @@ function Hero({ appliedDiscount }) {
   const [showToSuggestions, setShowToSuggestions] = useState(false);
   const fromRef = useRef(null);
   const toRef = useRef(null);
-  const [searchResults, setSearchResults] = useState([]); // State to store filtered results
-  const [showResults, setShowResults] = useState(false); // State to control results display
+
+  const [searchResults, setSearchResults] = useState([]);
+  const [showResults, setShowResults] = useState(false);
+  const navigate = useNavigate();
 
   // Close suggestions when clicking outside
   useEffect(() => {
@@ -83,18 +86,54 @@ function Hero({ appliedDiscount }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    console.log('Hero form submitted.', formData);
 
-    // Filter hardcoded trains based on from and to cities
-    const allTrains = [...trains, ...additionalTrains]; // Combine both arrays
+    const allTrains = [...trains, ...additionalTrains];
     const results = allTrains.filter(train => 
       train.from.toLowerCase() === formData.from.toLowerCase() &&
       train.to.toLowerCase() === formData.to.toLowerCase()
-      // Note: Date filtering is NOT implemented here based on the hardcoded data structure
-      // You would need to add date checking logic if your hardcoded data supported it.
     );
-    setSearchResults(results);
+
+    // Apply discount to search results
+    const discountedResults = results.map(train => {
+      let discountedFare = { ...train.fare };
+      if (appliedDiscount) {
+        // Only apply senior citizen discount if senior citizen quota is selected
+        if (appliedDiscount.code === 'SENIOR10') {
+          if (formData.quota !== 'senior') {
+            console.log('Senior citizen discount not applied - quota not senior');
+            return { ...train, fare: train.fare }; // Return original fare without discount
+          }
+          console.log('Senior citizen discount applied - quota is senior');
+        }
+        
+        discountedFare = Object.keys(train.fare).reduce((acc, className) => {
+          let baseFare = train.fare[className];
+          if (appliedDiscount.type === 'percent') {
+            baseFare = baseFare * (1 - appliedDiscount.value / 100);
+          } else if (appliedDiscount.type === 'flat') {
+            baseFare = Math.max(0, baseFare - appliedDiscount.value);
+          }
+          acc[className] = Math.round(baseFare);
+          return acc;
+        }, {});
+      }
+      return { ...train, fare: discountedFare };
+    });
+
+    setSearchResults(discountedResults);
     setShowResults(true);
-    console.log('Hero form submitted and filtered locally:', formData, results);
+    console.log('Hero search results after filtering and applying discount:', discountedResults);
+  };
+
+  const handleBookNow = (train) => {
+    navigate('/book-tickets', {
+      state: {
+        selectedTrain: train,
+        selectedClass: formData.classType || '3A',
+        appliedDiscount: appliedDiscount // Pass appliedDiscount
+      }
+    });
   };
 
   return (
@@ -225,9 +264,11 @@ function Hero({ appliedDiscount }) {
         <div className="max-w-5xl mx-auto mt-8">
           <h3 className="text-white text-xl font-semibold mb-4">Search Results</h3>
            <TrainList 
-             trains={searchResults} // Pass filtered results to TrainList
+             trains={searchResults}
              selectedClass={formData.classType || '3A'}
              appliedDiscount={appliedDiscount}
+             quota={formData.quota}
+             onBookNow={handleBookNow}
            />
          {searchResults.length === 0 && (
             <div className="mt-4 bg-yellow-500/10 border border-yellow-500 text-yellow-500 px-4 py-3 rounded-lg">

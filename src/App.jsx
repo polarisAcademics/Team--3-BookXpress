@@ -21,7 +21,7 @@ function MainContent() {
 
   const handleApplyOffer = (offer) => {
     console.log('Offer applied:', offer);
-    setAppliedDiscount(offer.discount.value);
+    setAppliedDiscount(offer.discount);
   };
 
   return (

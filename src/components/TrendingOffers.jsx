@@ -20,9 +20,24 @@ function TrendingOffer({ offer, onApplyOffer }) {
 
 function TrendingOffers({ onApplyOffer }) {
   const offers = [
-    { title: "Weekend Getaway", desc: "20% off on all weekend bookings", code: "WEEKEND20", discount: { type: 'percent', value: 20 } },
-    { title: "First Journey", desc: "Flat ₹100 off on your first booking", code: "FIRST100", discount: { type: 'flat', value: 100 } },
-    { title: "Senior Citizen", desc: "Additional 10% off for senior citizens", code: "SENIOR10", discount: { type: 'percent', value: 10 } },
+    { 
+      title: "Weekend Getaway", 
+      desc: "20% off on all weekend bookings", 
+      code: "WEEKEND20", 
+      discount: { type: 'percent', value: 20, code: 'WEEKEND20' } 
+    },
+    { 
+      title: "First Journey", 
+      desc: "Flat ₹100 off on your first booking", 
+      code: "FIRST100", 
+      discount: { type: 'flat', value: 100, code: 'FIRST100' } 
+    },
+    { 
+      title: "Senior Citizen", 
+      desc: "Additional 10% off for senior citizens", 
+      code: "SENIOR10", 
+      discount: { type: 'percent', value: 10, code: 'SENIOR10' } 
+    },
   ];
   return (
     <section>

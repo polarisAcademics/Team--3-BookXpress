@@ -1,15 +1,17 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-function TrainList({ trains, selectedClass, appliedDiscount }) {
+function TrainList({ trains, selectedClass, appliedDiscount, quota, onBookNow }) {
   const navigate = useNavigate();
 
   const handleBookNow = (train) => {
     // Navigate to book tickets page with train details
-    navigate('/book-tickets', { 
-      state: { 
+    // Pass selectedTrain, selectedClass, and appliedDiscount
+    navigate('/book-tickets', {
+      state: {
         selectedTrain: train,
-        selectedClass: selectedClass
+        selectedClass: selectedClass,
+        appliedDiscount: appliedDiscount // Pass the applied discount
       }
     });
   };
@@ -24,7 +26,15 @@ function TrainList({ trains, selectedClass, appliedDiscount }) {
 
   return (
     <div className="space-y-4">
-      {trains.map((train) => (
+      {trains.map((train) => {
+        console.log('TrainList rendering train fare details:', {
+            trainId: train.id,
+            trainFare: JSON.stringify(train.fare),
+            selectedClass: selectedClass,
+            appliedDiscount: JSON.stringify(appliedDiscount),
+            quota: quota
+        });
+        return (
         <div key={train.id} className="bg-[#1e2535] rounded-lg p-4 shadow-lg">
           <div className="flex justify-between items-start mb-4">
             <div>
@@ -73,7 +83,13 @@ function TrainList({ trains, selectedClass, appliedDiscount }) {
                     <span className="line-through text-[#7a8bbf] text-sm mr-2">
                       ₹{train.fare[selectedClass] || train.fare['3A']}
                     </span>
-                    ₹{Math.round((train.fare[selectedClass] || train.fare['3A']) * (1 - appliedDiscount / 100))}
+                    ₹{
+                      appliedDiscount.code === 'SENIOR10' && quota !== 'senior'
+                        ? train.fare[selectedClass] || train.fare['3A']
+                        : appliedDiscount.type === 'percent'
+                          ? Math.round((train.fare[selectedClass] || train.fare['3A']) * (1 - appliedDiscount.value / 100))
+                          : Math.max(0, (train.fare[selectedClass] || train.fare['3A']) - appliedDiscount.value)
+                    }
                   </>
                 ) : (
                   `₹${train.fare[selectedClass] || train.fare['3A']}`
@@ -95,14 +111,14 @@ function TrainList({ trains, selectedClass, appliedDiscount }) {
               ))}
             </div>
             <button 
-              onClick={() => handleBookNow(train)}
+              onClick={() => onBookNow(train)} // Use onBookNow prop for navigation
               className="bg-[#3b63f7] hover:bg-[#2f54e0] text-white px-4 py-2 rounded text-sm"
             >
               Book Now
             </button>
           </div>
         </div>
-      ))}
+      )})}
     </div>
   );
 }

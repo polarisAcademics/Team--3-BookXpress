@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { cities } from '../data/cities';
+import { trains } from '../data/trains';
+import TrainList from './TrainList';
 
 function Hero() {
   const [formData, setFormData] = useState({
@@ -16,6 +18,8 @@ function Hero() {
   const [showToSuggestions, setShowToSuggestions] = useState(false);
   const fromRef = useRef(null);
   const toRef = useRef(null);
+  const [searchResults, setSearchResults] = useState([]);
+  const [showResults, setShowResults] = useState(false);
 
   // Close suggestions when clicking outside
   useEffect(() => {
@@ -76,7 +80,13 @@ function Hero() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    // Filter trains based on from and to cities
+    const filteredTrains = trains.filter(train => 
+      train.from.toLowerCase() === formData.from.toLowerCase() &&
+      train.to.toLowerCase() === formData.to.toLowerCase()
+    );
+    setSearchResults(filteredTrains);
+    setShowResults(true);
   };
 
   return (
@@ -195,6 +205,15 @@ function Hero() {
           <span>Search Trains</span>
         </button>
       </form>
+
+      {showResults && (
+        <div className="max-w-5xl mx-auto mt-8">
+          <TrainList 
+            trains={searchResults} 
+            selectedClass={formData.classType || '3A'} 
+          />
+        </div>
+      )}
     </section>
   );
 }

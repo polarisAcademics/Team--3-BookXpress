@@ -1,26 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { cities } from '../data/cities';
 
 function BookTickets() {
   const location = useLocation();
-  const navigate = useNavigate();
   const { selectedTrain, selectedClass } = location.state || {};
 
   const [formData, setFormData] = useState({
-    name: '',
-    age: '',
-    gender: '',
-    berthPreference: '',
-    email: '',
-    phone: '',
+    from: '',
+    to: '',
+    date: '',
+    classType: '',
+    quota: 'general',
   });
 
-  // If no train data is passed, redirect to home
-  useEffect(() => {
-    if (!selectedTrain) {
-      navigate('/');
-    }
-  }, [selectedTrain, navigate]);
+  const [fromSuggestions, setFromSuggestions] = useState([]);
+  const [toSuggestions, setToSuggestions] = useState([]);
+  const [showFromSuggestions, setShowFromSuggestions] = useState(false);
+  const [showToSuggestions, setShowToSuggestions] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -28,157 +25,159 @@ function BookTickets() {
       ...prev,
       [name]: value
     }));
+
+    // Update suggestions based on input
+    if (name === 'from') {
+      const filtered = cities.filter(city => 
+        city.name.toLowerCase().includes(value.toLowerCase())
+      );
+      setFromSuggestions(filtered);
+      setShowFromSuggestions(true);
+    } else if (name === 'to') {
+      const filtered = cities.filter(city => 
+        city.name.toLowerCase().includes(value.toLowerCase())
+      );
+      setToSuggestions(filtered);
+      setShowToSuggestions(true);
+    }
+  };
+
+  const handleSuggestionClick = (city, field) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: city.name
+    }));
+    if (field === 'from') {
+      setShowFromSuggestions(false);
+    } else {
+      setShowToSuggestions(false);
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle booking submission
-    console.log('Booking submitted:', { selectedTrain, selectedClass, formData });
-    // You can add your booking logic here
+    console.log('Form submitted:', formData);
   };
-
-  if (!selectedTrain) {
-    return null;
-  }
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="bg-[#1e2535] rounded-lg p-6 mb-6">
-        <h2 className="text-white text-xl font-semibold mb-4">Train Details</h2>
-        <div className="grid grid-cols-2 gap-4 text-white">
-          <div>
-            <p className="text-[#7a8bbf]">Train</p>
-            <p className="font-semibold">{selectedTrain.name} ({selectedTrain.id})</p>
-          </div>
-          <div>
-            <p className="text-[#7a8bbf]">Class</p>
-            <p className="font-semibold">{selectedClass}</p>
-          </div>
-          <div>
-            <p className="text-[#7a8bbf]">From</p>
-            <p className="font-semibold">{selectedTrain.from}</p>
-          </div>
-          <div>
-            <p className="text-[#7a8bbf]">To</p>
-            <p className="font-semibold">{selectedTrain.to}</p>
-          </div>
-          <div>
-            <p className="text-[#7a8bbf]">Departure</p>
-            <p className="font-semibold">{selectedTrain.departure}</p>
-          </div>
-          <div>
-            <p className="text-[#7a8bbf]">Arrival</p>
-            <p className="font-semibold">{selectedTrain.arrival}</p>
-          </div>
-          <div>
-            <p className="text-[#7a8bbf]">Duration</p>
-            <p className="font-semibold">{selectedTrain.duration}</p>
-          </div>
-          <div>
-            <p className="text-[#7a8bbf]">Fare</p>
-            <p className="font-semibold">₹{selectedTrain.fare[selectedClass]}</p>
-          </div>
-        </div>
-      </div>
-
+      <h1 className="text-white text-2xl font-semibold mb-6">Book Train Tickets</h1>
+      
       <form onSubmit={handleSubmit} className="bg-[#1e2535] rounded-lg p-6">
-        <h2 className="text-white text-xl font-semibold mb-6">Passenger Details</h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-            <label className="block text-[#7a8bbf] mb-2">Full Name</label>
-                <input
-                  type="text"
-              name="name"
-              value={formData.name}
-                  onChange={handleChange}
-                  required
-              className="w-full bg-[#2a3147] text-white rounded px-3 py-2"
-                />
-            </div>
-
-            <div>
-            <label className="block text-[#7a8bbf] mb-2">Age</label>
-                <input
-              type="number"
-              name="age"
-              value={formData.age}
-                  onChange={handleChange}
-                  required
-              min="1"
-              max="120"
-              className="w-full bg-[#2a3147] text-white rounded px-3 py-2"
-                />
-            </div>
-
-            <div>
-            <label className="block text-[#7a8bbf] mb-2">Gender</label>
-            <select
-              name="gender"
-              value={formData.gender}
-                  onChange={handleChange}
-                  required
-              className="w-full bg-[#2a3147] text-white rounded px-3 py-2"
-            >
-              <option value="">Select Gender</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
-            </div>
-
-              <div>
-            <label className="block text-[#7a8bbf] mb-2">Berth Preference</label>
-                <select
-              name="berthPreference"
-              value={formData.berthPreference}
-                  onChange={handleChange}
-              required
-              className="w-full bg-[#2a3147] text-white rounded px-3 py-2"
-            >
-              <option value="">Select Preference</option>
-              <option value="lower">Lower</option>
-              <option value="middle">Middle</option>
-              <option value="upper">Upper</option>
-              <option value="side_lower">Side Lower</option>
-              <option value="side_upper">Side Upper</option>
-                </select>
-              </div>
-
-              <div>
-            <label className="block text-[#7a8bbf] mb-2">Email</label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="relative">
+            <label className="block text-[#7a8bbf] mb-2">From Station</label>
             <input
-              type="email"
-              name="email"
-              value={formData.email}
-                  onChange={handleChange}
+              type="text"
+              name="from"
+              value={formData.from}
+              onChange={handleChange}
+              placeholder="Enter city or station"
               required
               className="w-full bg-[#2a3147] text-white rounded px-3 py-2"
             />
+            {showFromSuggestions && fromSuggestions.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-[#2a3147] rounded-md shadow-lg max-h-60 overflow-auto">
+                {fromSuggestions.map((city) => (
+                  <div
+                    key={city.code}
+                    className="px-4 py-2 text-white text-sm hover:bg-[#3b63f7] cursor-pointer"
+                    onClick={() => handleSuggestionClick(city, 'from')}
+                  >
+                    {city.name} ({city.code})
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="relative">
+            <label className="block text-[#7a8bbf] mb-2">To Station</label>
+            <input
+              type="text"
+              name="to"
+              value={formData.to}
+              onChange={handleChange}
+              placeholder="Enter city or station"
+              required
+              className="w-full bg-[#2a3147] text-white rounded px-3 py-2"
+            />
+            {showToSuggestions && toSuggestions.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-[#2a3147] rounded-md shadow-lg max-h-60 overflow-auto">
+                {toSuggestions.map((city) => (
+                  <div
+                    key={city.code}
+                    className="px-4 py-2 text-white text-sm hover:bg-[#3b63f7] cursor-pointer"
+                    onClick={() => handleSuggestionClick(city, 'to')}
+                  >
+                    {city.name} ({city.code})
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>
-            <label className="block text-[#7a8bbf] mb-2">Phone Number</label>
+            <label className="block text-[#7a8bbf] mb-2">Journey Date</label>
             <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
+              type="date"
+              name="date"
+              value={formData.date}
               onChange={handleChange}
               required
-              pattern="[0-9]{10}"
               className="w-full bg-[#2a3147] text-white rounded px-3 py-2"
             />
           </div>
+
+          <div>
+            <label className="block text-[#7a8bbf] mb-2">Class</label>
+            <select
+              name="classType"
+              value={formData.classType}
+              onChange={handleChange}
+              required
+              className="w-full bg-[#2a3147] text-white rounded px-3 py-2"
+            >
+              <option value="">Select Class</option>
+              <option value="1A">First AC (1A)</option>
+              <option value="2A">Second AC (2A)</option>
+              <option value="3A">Third AC (3A)</option>
+              <option value="SL">Sleeper (SL)</option>
+            </select>
+          </div>
         </div>
 
-        <div className="mt-8">
-          <button
-            type="submit"
-            className="w-full bg-[#3b63f7] hover:bg-[#2f54e0] text-white py-3 rounded font-semibold"
-          >
-            Proceed to Payment
-          </button>
+        <div className="mb-6">
+          <label className="block text-[#7a8bbf] mb-2">Quota</label>
+          <div className="flex flex-wrap gap-4">
+            {[
+              { label: 'General', value: 'general' },
+              { label: 'Ladies', value: 'ladies' },
+              { label: 'Senior Citizen', value: 'senior' },
+              { label: 'Tatkal', value: 'tatkal' },
+              { label: 'Premium Tatkal', value: 'premium' },
+            ].map(({ label, value }) => (
+              <label key={value} className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="quota"
+                  value={value}
+                  checked={formData.quota === value}
+                  onChange={() => setFormData(prev => ({ ...prev, quota: value }))}
+                  className="accent-[#3b63f7]"
+                />
+                <span className="text-white">{label}</span>
+              </label>
+            ))}
+          </div>
         </div>
+
+        <button
+          type="submit"
+          className="w-full bg-[#3b63f7] hover:bg-[#2f54e0] text-white py-3 rounded font-semibold"
+        >
+          Search Trains
+        </button>
       </form>
     </div>
   );

@@ -50,14 +50,14 @@ router.post('/signup', async (req, res) => {
     // Generate JWT token
     const token = jwt.sign(
       { userId: user._id },
-      process.env.JWT_SECRET || 'your-secret-key',
+      process.env.JWT_SECRET || '2c7c38fa6176b7db559c2f9e86f9b53d33125685022574386639ad43468b019dd061be65ba76e377253f2c44fcf640153686cd896f11bc30b3fe3eab3f39e3b2',
       { expiresIn: '24h' }
     );
 
     // Generate refresh token
     const refreshToken = jwt.sign(
       { userId: user._id },
-      process.env.REFRESH_TOKEN_SECRET || 'your-refresh-secret-key',
+      process.env.REFRESH_TOKEN_SECRET || '2c7c38fa6176b7db559c2f9e86f9b53d33125685022574386639ad43468b019dd061be65ba76e377253f2c44fcf640153686cd896f11bc30b3fe3eab3f39e3b2',
       { expiresIn: '7d' }
     );
 
@@ -115,14 +115,14 @@ router.post('/login', async (req, res) => {
     // Generate JWT token
     const token = jwt.sign(
       { userId: user._id },
-      process.env.JWT_SECRET || 'your-secret-key',
+      process.env.JWT_SECRET || '2c7c38fa6176b7db559c2f9e86f9b53d33125685022574386639ad43468b019dd061be65ba76e377253f2c44fcf640153686cd896f11bc30b3fe3eab3f39e3b2',
       { expiresIn: '24h' }
     );
 
     // Generate refresh token
     const refreshToken = jwt.sign(
       { userId: user._id },
-      process.env.REFRESH_TOKEN_SECRET || 'your-refresh-secret-key',
+      process.env.REFRESH_TOKEN_SECRET || '2c7c38fa6176b7db559c2f9e86f9b53d33125685022574386639ad43468b019dd061be65ba76e377253f2c44fcf640153686cd896f11bc30b3fe3eab3f39e3b2',
       { expiresIn: '7d' }
     );
 
@@ -153,13 +153,13 @@ router.post('/refresh-token', async (req, res) => {
     // Verify refresh token
     const decoded = jwt.verify(
       refreshToken,
-      process.env.REFRESH_TOKEN_SECRET || 'your-refresh-secret-key'
+      process.env.REFRESH_TOKEN_SECRET || '2c7c38fa6176b7db559c2f9e86f9b53d33125685022574386639ad43468b019dd061be65ba76e377253f2c44fcf640153686cd896f11bc30b3fe3eab3f39e3b2'
     );
 
     // Generate new access token
     const token = jwt.sign(
       { userId: decoded.userId },
-      process.env.JWT_SECRET || 'your-secret-key',
+      process.env.JWT_SECRET || '2c7c38fa6176b7db559c2f9e86f9b53d33125685022574386639ad43468b019dd061be65ba76e377253f2c44fcf640153686cd896f11bc30b3fe3eab3f39e3b2',
       { expiresIn: '24h' }
     );
 

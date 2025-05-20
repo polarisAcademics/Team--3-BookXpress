@@ -39,7 +39,7 @@ app.use('/api/trains', trainsRoute);
 app.use('/api/recent-searches', recentSearchesRoute);
 
 // MongoDB connection with better error handling
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/bookxpress';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://krishanttanti:8y30NQRQVNCYayGS@cluster0.mlp9lvu.mongodb.net/';
 
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,

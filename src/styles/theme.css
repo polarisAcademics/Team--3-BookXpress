@@ -1,0 +1,77 @@
+/* Light mode styles */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f3f4f6;
+  --text-primary: #1f2937;
+  --text-secondary: #4b5563;
+  --accent-color: #4a6cf7;
+  --accent-hover: #3b63f7;
+  --border-color: #e5e7eb;
+}
+
+/* Dark mode styles */
+.dark {
+  --bg-primary: #161f2e;
+  --bg-secondary: #1e2535;
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --accent-color: #4a6cf7;
+  --accent-hover: #3b63f7;
+  --border-color: #374151;
+}
+
+/* Apply theme variables */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.bg-theme-primary {
+  background-color: var(--bg-primary);
+}
+
+.bg-theme-secondary {
+  background-color: var(--bg-secondary);
+}
+
+.text-theme-primary {
+  color: var(--text-primary);
+}
+
+.text-theme-secondary {
+  color: var(--text-secondary);
+}
+
+.border-theme {
+  border-color: var(--border-color);
+}
+
+/* Component-specific theme styles */
+.navbar {
+  background-color: var(--bg-secondary);
+}
+
+.card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.input-field {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.input-field:focus {
+  border-color: var(--accent-color);
+}
+
+.button-primary {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+.button-primary:hover {
+  background-color: var(--accent-hover);
+} 

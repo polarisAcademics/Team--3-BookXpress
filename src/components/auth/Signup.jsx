@@ -90,18 +90,18 @@ function Signup() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#161f2e] py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-[#1e2535] p-8 rounded-lg shadow-xl">
+    <div className="min-h-screen flex items-center justify-center bg-theme-primary py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-theme-secondary p-8 rounded-lg shadow-xl">
         <div>
           <div className="flex justify-center items-center">
-            <i className="fas fa-train text-[#4a6cf7] text-3xl"></i>
+            <i className="fas fa-train text-[var(--accent-color)] text-3xl"></i>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-theme-primary">
             Create your account
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-400">
+          <p className="mt-2 text-center text-sm text-theme-secondary">
             Or{' '}
-            <a href="/login" className="font-medium text-[#4a6cf7] hover:text-[#3b63f7]">
+            <a href="/login" className="font-medium text-[var(--accent-color)] hover:text-[var(--accent-hover)]">
               sign in to your account
             </a>
           </p>

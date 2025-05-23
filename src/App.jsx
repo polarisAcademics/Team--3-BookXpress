@@ -1,6 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
+import './styles/theme.css';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import Login from './components/auth/Login';
 import Signup from './components/auth/Signup';
@@ -90,56 +92,58 @@ try {
 function App() {
   return (
     <Router>
-      <AuthProvider>
-        <div className="min-h-screen bg-[#161f2e]">
-          <Navbar />
-          <div className="pt-16 pb-8">
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
-                    <MainContent />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/live-status"
-                element={
-                  <ProtectedRoute>
-                    <div className="container mx-auto px-4 py-8">
-                      <TrainStatus />
-                    </div>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/book-tickets"
-                element={
-                  <ProtectedRoute>
-                    <div className="container mx-auto px-4 py-8">
-                      <BookTickets />
-                    </div>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/my-bookings"
-                element={
-                  <ProtectedRoute>
-                    <div className="container mx-auto px-4 py-8">
-                      <MyBookings />
-                    </div>
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
+      <ThemeProvider>
+        <AuthProvider>
+          <div className="min-h-screen bg-theme-primary">
+            <Navbar />
+            <div className="pt-16 pb-8">
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route
+                  path="/"
+                  element={
+                    <ProtectedRoute>
+                      <MainContent />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/live-status"
+                  element={
+                    <ProtectedRoute>
+                      <div className="container mx-auto px-4 py-8">
+                        <TrainStatus />
+                      </div>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/book-tickets"
+                  element={
+                    <ProtectedRoute>
+                      <div className="container mx-auto px-4 py-8">
+                        <BookTickets />
+                      </div>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/my-bookings"
+                  element={
+                    <ProtectedRoute>
+                      <div className="container mx-auto px-4 py-8">
+                        <MyBookings />
+                      </div>
+                    </ProtectedRoute>
+                  }
+                />
+              </Routes>
+            </div>
+            <Footer />
           </div>
-          <Footer />
-        </div>
-      </AuthProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </Router>
   );
 }

@@ -30,10 +30,10 @@ function TrainStatus() {
     };
 
     return (
-        <div className="bg-[#1e2535] rounded-lg shadow-xl p-6 max-w-4xl mx-auto">
+        <div className="bg-theme-secondary rounded-lg shadow-xl p-6 max-w-4xl mx-auto">
             <div className="mb-8">
-                <h2 className="text-2xl font-bold text-white mb-2">Live Train Status</h2>
-                <p className="text-gray-400">Track your train's schedule and route</p>
+                <h2 className="text-2xl font-bold text-theme-primary mb-2">Live Train Status</h2>
+                <p className="text-theme-secondary">Track your train's schedule and route</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -48,7 +48,7 @@ function TrainStatus() {
                             id="trainNumber"
                             value={trainNumber}
                             onChange={(e) => setTrainNumber(e.target.value)}
-                            className="bg-[#2a3147] text-white pl-10 pr-4 py-3 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-[#4a6cf7] transition-all duration-200"
+                            className="bg-theme-primary text-theme-primary placeholder:text-theme-secondary pl-10 pr-4 py-3 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] focus:border-[var(--accent-color)] transition-all duration-200"
                             placeholder="Enter train number"
                             required
                         />

@@ -71,10 +71,10 @@ function MyBookings() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="bg-[#1e2535] rounded-lg shadow-xl p-6">
+      <div className="bg-theme-secondary rounded-lg shadow-xl p-6">
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white mb-2">My Bookings</h2>
-          <p className="text-gray-400">View and manage your train bookings</p>
+          <h2 className="text-2xl font-bold text-theme-primary mb-2">My Bookings</h2>
+          <p className="text-theme-secondary">View and manage your train bookings</p>
         </div>
 
         {error && (
@@ -88,17 +88,17 @@ function MyBookings() {
 
         {bookings.length === 0 ? (
           <div className="text-center py-12">
-            <i className="fas fa-ticket-alt text-gray-600 text-4xl mb-4"></i>
-            <p className="text-gray-400">No bookings found</p>
+            <i className="fas fa-ticket-alt text-theme-secondary text-4xl mb-4"></i>
+            <p className="text-theme-secondary">No bookings found</p>
           </div>
         ) : (
           <div className="space-y-4">
             {bookings.map((booking) => (
-              <div key={booking.id} className="bg-[#2a3147] rounded-lg p-6">
+              <div key={booking.id} className="bg-theme-primary rounded-lg p-6">
                 <div className="flex justify-between items-start mb-6">
                   <div>
-                    <h3 className="text-white font-medium text-lg mb-1">{booking.trainName}</h3>
-                    <p className="text-gray-400 text-sm">PNR: {booking.pnr}</p>
+                    <h3 className="text-theme-primary font-medium text-lg mb-1">{booking.trainName}</h3>
+                    <p className="text-theme-secondary text-sm">PNR: {booking.pnr}</p>
                   </div>
                   <div className="text-right">
                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
@@ -113,32 +113,32 @@ function MyBookings() {
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
                   <div>
-                    <p className="text-gray-400 text-sm mb-1">From</p>
-                    <p className="text-white">{booking.from}</p>
+                    <p className="text-theme-secondary text-sm mb-1">From</p>
+                    <p className="text-theme-primary">{booking.from}</p>
                   </div>
                   <div>
-                    <p className="text-gray-400 text-sm mb-1">To</p>
-                    <p className="text-white">{booking.to}</p>
+                    <p className="text-theme-secondary text-sm mb-1">To</p>
+                    <p className="text-theme-primary">{booking.to}</p>
                   </div>
                   <div>
-                    <p className="text-gray-400 text-sm mb-1">Travel Date</p>
-                    <p className="text-white">{new Date(booking.date).toLocaleDateString()}</p>
+                    <p className="text-theme-secondary text-sm mb-1">Travel Date</p>
+                    <p className="text-theme-primary">{new Date(booking.date).toLocaleDateString()}</p>
                   </div>
                   <div>
-                    <p className="text-gray-400 text-sm mb-1">Class</p>
-                    <p className="text-white">{booking.class}</p>
+                    <p className="text-theme-secondary text-sm mb-1">Class</p>
+                    <p className="text-theme-primary">{booking.class}</p>
                   </div>
                 </div>
 
-                <div className="border-t border-gray-700 pt-4">
+                <div className="border-t border-theme-secondary pt-4">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                      <p className="text-gray-400 text-sm mb-1">Passengers</p>
+                      <p className="text-theme-secondary text-sm mb-1">Passengers</p>
                       <div className="flex flex-wrap gap-2">
                         {booking.passengers.map((passenger, index) => (
                           <span
                             key={index}
-                            className="inline-flex items-center px-3 py-1 rounded-lg bg-[#343e57] text-white text-sm"
+                            className="inline-flex items-center px-3 py-1 rounded-lg bg-theme-secondary text-theme-primary text-sm"
                           >
                             {passenger.name}
                             {passenger.seatNumber && ` • ${passenger.seatNumber}`}

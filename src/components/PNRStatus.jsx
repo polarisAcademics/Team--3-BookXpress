@@ -60,19 +60,19 @@ function PNRStatus() {
   };
 
   return (
-    <section className="bg-[#1e2535] rounded-md shadow-md">
-      <h3 className="bg-[#3b63f7] text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-t-md">
+    <section className="bg-theme-secondary rounded-md shadow-md">
+      <h3 className="bg-[var(--accent-color)] text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-t-md">
         PNR Status
       </h3>
       <form className="p-4 space-y-3" onSubmit={handleSubmit}>
-        <label htmlFor="pnr" className="block text-xs sm:text-sm text-white/80 mb-1">Enter PNR Number</label>
+        <label htmlFor="pnr" className="block text-xs sm:text-sm text-theme-primary mb-1">Enter PNR Number</label>
         <input
           id="pnr"
           type="text"
           value={pnr}
           onChange={handlePnrChange}
           placeholder="10-digit PNR number"
-          className="w-full bg-[#2a3147] text-white text-xs sm:text-sm rounded px-3 py-2 placeholder:text-[#7a8bbf]"
+          className="w-full bg-theme-primary text-theme-primary text-xs sm:text-sm rounded px-3 py-2 placeholder:text-theme-secondary"
           maxLength={10}
           pattern="[0-9]{10}"
           required
@@ -80,7 +80,7 @@ function PNRStatus() {
         <button
           type="submit"
           disabled={loading || pnr.length !== 10}
-          className="w-full bg-[#3b63f7] hover:bg-[#2f54e0] transition rounded py-2 text-white text-xs sm:text-sm font-semibold flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] transition rounded py-2 text-white text-xs sm:text-sm font-semibold flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (
             <>

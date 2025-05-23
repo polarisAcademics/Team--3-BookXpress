@@ -158,18 +158,18 @@ function Hero({ appliedDiscount, onSearch }) {
   };
 
   return (
-    <section className="relative bg-[#161f2e] py-20 text-white">
+    <section className="relative bg-theme-primary py-20 text-theme-primary">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold leading-tight mb-4">Find and Book Your Train Tickets</h1>
-          <p className="text-[#7a8bbf] text-lg">Search across various routes and book your journey seamlessly.</p>
+          <p className="text-theme-secondary text-lg">Search across various routes and book your journey seamlessly.</p>
         </div>
 
-        <div className="bg-[#1e2535] rounded-lg p-8 shadow-xl max-w-4xl mx-auto">
+        <div className="bg-theme-secondary rounded-lg p-8 shadow-xl max-w-4xl mx-auto">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="relative" ref={fromRef}>
-                <label className="block text-[#7a8bbf] text-sm font-medium mb-2">From Station</label>
+                <label className="block text-theme-secondary text-sm font-medium mb-2">From Station</label>
                 <input
                   type="text"
                   name="from"
@@ -177,15 +177,15 @@ function Hero({ appliedDiscount, onSearch }) {
                   onChange={handleChange}
                   onFocus={() => setShowFromSuggestions(true)}
                   placeholder="Enter city or station"
-                  className="w-full bg-[#2a3147] text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#3b63f7]"
+                  className="w-full bg-theme-primary text-theme-primary rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
                   required
                 />
                 {showFromSuggestions && fromSuggestions.length > 0 && (
-                  <div className="absolute z-10 w-full bg-[#2a3147] rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
+                  <div className="absolute z-10 w-full bg-theme-primary rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
                     {fromSuggestions.map((city) => (
                       <div
                         key={city.code}
-                        className="px-4 py-2 text-sm text-white hover:bg-[#3b63f7] cursor-pointer"
+                        className="px-4 py-2 text-sm text-theme-primary hover:bg-[var(--accent-color)] hover:text-white cursor-pointer"
                         onClick={() => handleSuggestionClick(city, 'from')}
                       >
                         {city.name} ({city.code})
@@ -196,7 +196,7 @@ function Hero({ appliedDiscount, onSearch }) {
               </div>
 
               <div className="relative" ref={toRef}>
-                <label className="block text-[#7a8bbf] text-sm font-medium mb-2">To Station</label>
+                <label className="block text-theme-secondary text-sm font-medium mb-2">To Station</label>
                 <input
                   type="text"
                   name="to"
@@ -204,15 +204,15 @@ function Hero({ appliedDiscount, onSearch }) {
                   onChange={handleChange}
                   onFocus={() => setShowToSuggestions(true)}
                   placeholder="Enter city or station"
-                  className="w-full bg-[#2a3147] text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#3b63f7]"
+                  className="w-full bg-theme-primary text-theme-primary rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
                   required
                 />
                 {showToSuggestions && toSuggestions.length > 0 && (
-                  <div className="absolute z-10 w-full bg-[#2a3147] rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
+                  <div className="absolute z-10 w-full bg-theme-primary rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
                     {toSuggestions.map((city) => (
                       <div
                         key={city.code}
-                        className="px-4 py-2 text-sm text-white hover:bg-[#3b63f7] cursor-pointer"
+                        className="px-4 py-2 text-sm text-theme-primary hover:bg-[var(--accent-color)] hover:text-white cursor-pointer"
                         onClick={() => handleSuggestionClick(city, 'to')}
                       >
                         {city.name} ({city.code})
@@ -225,23 +225,23 @@ function Hero({ appliedDiscount, onSearch }) {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block text-[#7a8bbf] text-sm font-medium mb-2">Journey Date</label>
+                <label className="block text-theme-secondary text-sm font-medium mb-2">Journey Date</label>
                 <input
                   type="date"
                   name="date"
                   value={formData.date}
                   onChange={handleChange}
-                  className="w-full bg-[#2a3147] text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#3b63f7]"
+                  className="w-full bg-theme-primary text-theme-primary rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
                   required
                 />
               </div>
               <div>
-                <label className="block text-[#7a8bbf] text-sm font-medium mb-2">Class</label>
+                <label className="block text-theme-secondary text-sm font-medium mb-2">Class</label>
                 <select
                   name="classType"
                   value={formData.classType}
                   onChange={handleChange}
-                  className="w-full bg-[#2a3147] text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#3b63f7]"
+                  className="w-full bg-theme-primary text-theme-primary rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
                   required
                 >
                   <option value="">Select Class</option>
@@ -252,12 +252,12 @@ function Hero({ appliedDiscount, onSearch }) {
                 </select>
               </div>
               <div>
-                <label className="block text-[#7a8bbf] text-sm font-medium mb-2">Quota</label>
+                <label className="block text-theme-secondary text-sm font-medium mb-2">Quota</label>
                 <select
                   name="quota"
                   value={formData.quota}
                   onChange={handleChange}
-                  className="w-full bg-[#2a3147] text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#3b63f7]"
+                  className="w-full bg-theme-primary text-theme-primary rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
                 >
                   <option value="general">General</option>
                   <option value="ladies">Ladies</option>
@@ -271,7 +271,7 @@ function Hero({ appliedDiscount, onSearch }) {
             <div className="text-center">
               <button
                 type="submit"
-                className="bg-[#3b63f7] hover:bg-[#2f54e0] text-white font-semibold py-2 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3b63f7] focus:ring-offset-2"
+                className="w-full bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] text-white py-3 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Search Trains
               </button>

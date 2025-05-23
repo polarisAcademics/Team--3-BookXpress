@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 function Navbar() {
   const { user, logout } = useAuth();
+  const { isDarkMode, toggleTheme } = useTheme();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -17,7 +19,7 @@ function Navbar() {
   ];
 
   return (
-    <nav className="bg-[#1e2535] shadow-lg">
+    <nav className="bg-theme-secondary shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* Logo and brand */}
@@ -43,6 +45,19 @@ function Navbar() {
                 {item.label}
               </Link>
             ))}
+            
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-md text-gray-300 hover:bg-[#2a3147] hover:text-white transition-colors duration-200"
+              aria-label="Toggle theme"
+            >
+              {isDarkMode ? (
+                <i className="fas fa-sun text-yellow-400"></i>
+              ) : (
+                <i className="fas fa-moon text-gray-400"></i>
+              )}
+            </button>
             
             {user ? (
               <div className="flex items-center ml-4">
@@ -104,6 +119,15 @@ function Navbar() {
               {item.label}
             </Link>
           ))}
+          
+          {/* Theme Toggle Button in Mobile Menu */}
+          <button
+            onClick={toggleTheme}
+            className="w-full px-4 py-2 text-left text-sm font-medium text-gray-300 hover:bg-[#2a3147] hover:text-white"
+          >
+            <i className={`fas fa-${isDarkMode ? 'sun' : 'moon'} mr-2`}></i>
+            {isDarkMode ? 'Light Mode' : 'Dark Mode'}
+          </button>
           
           {user ? (
             <div className="px-4 py-2">

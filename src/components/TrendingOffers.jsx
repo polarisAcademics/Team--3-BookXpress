@@ -2,13 +2,13 @@ import React from "react";
 
 function TrendingOffer({ offer, onApplyOffer }) {
   return (
-    <div className="bg-[#1e2535] rounded-md p-4 shadow-md text-xs sm:text-sm">
-      <h5 className="font-semibold text-white mb-1">{offer.title}</h5>
-      <p className="text-white/70 mb-2">{offer.desc}</p>
-      <div className="bg-[#2a3147] rounded px-2 py-1 w-max text-white/70 text-[10px] sm:text-xs flex items-center justify-between space-x-2">
+    <div className="bg-theme-secondary rounded-md p-4 shadow-md text-xs sm:text-sm">
+      <h5 className="font-semibold text-theme-primary mb-1">{offer.title}</h5>
+      <p className="text-theme-secondary mb-2">{offer.desc}</p>
+      <div className="bg-theme-primary rounded px-2 py-1 w-max text-theme-secondary text-[10px] sm:text-xs flex items-center justify-between space-x-2">
         <span>{offer.code}</span>
         <button 
-          className="bg-[#3b63f7] hover:bg-[#2f54e0] transition rounded px-2 py-0.5 text-white text-[10px] sm:text-xs font-semibold"
+          className="bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] transition rounded px-2 py-0.5 text-white text-[10px] sm:text-xs font-semibold"
           onClick={() => onApplyOffer(offer)}
         >
           Apply

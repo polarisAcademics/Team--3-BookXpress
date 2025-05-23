@@ -9,13 +9,19 @@ import trainsRoute from './routes/trains.js';
 import ticketRoutes from './routes/ticket.js';
 import pnrStatusRoute from './routes/pnrStatus.js';
 import recentSearchesRoute from './routes/recentSearches.js';
+import travelersRoute from './routes/travelers.js';
 
 dotenv.config();
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// Configure CORS with specific options
+app.use(cors({
+  origin: 'http://localhost:5173', // Your frontend URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
 
 // JSON parsing with error handling
 app.use(express.json({
@@ -37,6 +43,12 @@ app.use('/api', pnrStatusRoute);
 app.use('/api/bookings', bookingsRoute);
 app.use('/api/trains', trainsRoute);
 app.use('/api/recent-searches', recentSearchesRoute);
+app.use('/api/travelers', travelersRoute);
+
+// Add a test route to verify the server is running
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Server is running' });
+});
 
 // MongoDB connection with better error handling
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://krishanttanti:8y30NQRQVNCYayGS@cluster0.mlp9lvu.mongodb.net/';

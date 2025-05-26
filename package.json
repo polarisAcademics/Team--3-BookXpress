@@ -16,6 +16,7 @@
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.509.0",
     "node-fetch": "^3.3.2",
+    "razorpay": "^2.9.6",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^6.30.1"

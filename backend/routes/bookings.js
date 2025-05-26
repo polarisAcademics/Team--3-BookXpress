@@ -6,6 +6,20 @@ const router = express.Router();
 // Temporary in-memory storage for bookings (replace with MongoDB model later)
 let bookings = [];
 
+// Store a booking from payment verification
+router.post('/store', async (req, res) => {
+  try {
+    const booking = {
+      ...req.body,
+      createdAt: new Date()
+    };
+    bookings.push(booking);
+    res.status(201).json({ success: true, booking });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to store booking' });
+  }
+});
+
 // Get all bookings
 router.get('/', async (req, res) => {
   try {

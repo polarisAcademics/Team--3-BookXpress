@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { processPayment } from '../services/paymentService';
 
 // Add API base URL constant
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = 'http://localhost:3001';
 
 function BookTickets() {
   const location = useLocation();
+  const navigate = useNavigate();
   // Receive selected train details, class, and appliedDiscount from navigation state
   const { selectedTrain, selectedClass, appliedDiscount } = location.state || {};
 
@@ -24,6 +26,8 @@ function BookTickets() {
   const [savedTravelers, setSavedTravelers] = useState([]);
   const [showSaveTravelerModal, setShowSaveTravelerModal] = useState(false);
   const [selectedTravelerIndex, setSelectedTravelerIndex] = useState(null);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [paymentError, setPaymentError] = useState(null);
 
   // Fetch saved travelers when component mounts
   useEffect(() => {
@@ -179,17 +183,78 @@ function BookTickets() {
     return Math.round(totalBaseFare);
   };
 
-  const handlePayment = () => {
-    // Implement payment gateway integration here
-    console.log('Processing payment for booking:', {
-      train: selectedTrain,
-      passengers: formData.passengers,
-      contact: formData.contact,
-      fare: calculateFare(),
-      appliedDiscount: appliedDiscount // Include discount in log
-    });
-    alert('Proceeding to payment with details logged to console.');
-    // In a real app, you would integrate with a payment gateway here
+  const handlePayment = async () => {
+    // Validate form data
+    const isFormValid = validateForm();
+    if (!isFormValid) {
+      alert('Please fill in all required fields correctly.');
+      return;
+    }
+
+    setIsProcessingPayment(true);
+    setPaymentError(null);
+
+    try {
+      const totalAmount = calculateFare() + Math.round(calculateFare() * 0.05); // Including service charges
+      
+      const bookingData = {
+        train: selectedTrain,
+        selectedClass: selectedClass,
+        passengers: formData.passengers,
+        contact: formData.contact,
+        totalAmount: totalAmount,
+        appliedDiscount: appliedDiscount,
+        travelDate: selectedTrain.date || new Date().toISOString().split('T')[0],
+      };
+
+      console.log('Processing payment for booking:', bookingData);
+      
+      // Process payment using Razorpay
+      const booking = await processPayment(bookingData);
+      
+      // Payment successful, redirect to booking confirmation
+      navigate('/booking-success', { 
+        state: { 
+          booking,
+          message: 'Payment successful! Your ticket has been confirmed.' 
+        } 
+      });
+      
+    } catch (error) {
+      console.error('Payment error:', error);
+      setPaymentError(error.message || 'Payment failed. Please try again.');
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
+  const validateForm = () => {
+    // Validate passengers
+    for (const passenger of formData.passengers) {
+      if (!passenger.name || !passenger.age || passenger.age < 1 || passenger.age > 120) {
+        return false;
+      }
+    }
+    
+    // Validate contact information
+    const { name, email, phone, address } = formData.contact;
+    if (!name || !email || !phone || !address) {
+      return false;
+    }
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return false;
+    }
+    
+    // Basic phone validation
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(phone.replace(/\D/g, ''))) {
+      return false;
+    }
+    
+    return true;
   };
 
   // Display selected train details if available
@@ -416,13 +481,35 @@ function BookTickets() {
           </div>
         </div>
 
+        {/* Payment Error Display */}
+        {paymentError && (
+          <div className="bg-red-900/50 border border-red-500 rounded-lg p-4">
+            <div className="flex items-center space-x-2">
+              <span className="text-red-400">⚠️</span>
+              <p className="text-red-300">{paymentError}</p>
+            </div>
+          </div>
+        )}
+
         {/* Payment Button */}
         <button
           type="button"
           onClick={handlePayment}
-          className="w-full bg-[#3b63f7] hover:bg-[#2f54e0] text-white py-3 rounded font-semibold"
+          disabled={isProcessingPayment}
+          className={`w-full py-3 rounded font-semibold transition-colors ${
+            isProcessingPayment
+              ? 'bg-gray-600 cursor-not-allowed text-gray-300'
+              : 'bg-[#3b63f7] hover:bg-[#2f54e0] text-white'
+          }`}
         >
-          Proceed to Payment
+          {isProcessingPayment ? (
+            <div className="flex items-center justify-center space-x-2">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              <span>Processing Payment...</span>
+            </div>
+          ) : (
+            'Proceed to Payment'
+          )}
         </button>
       </form>
 

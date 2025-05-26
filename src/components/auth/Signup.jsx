@@ -66,9 +66,9 @@ function Signup() {
       setLoading(true);
       try {
         const { confirmPassword, ...signupData } = formData;
-        const data = await authService.signup(signupData);
-        await signup(signupData); // Update auth context
-        navigate('/');
+        await authService.signup(signupData);
+        // Optionally, show a success message here
+        navigate('/login'); // Redirect to login after successful signup
       } catch (error) {
         setGeneralError(error.message || 'Failed to create account. Please try again.');
       } finally {

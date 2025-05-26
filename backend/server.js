@@ -10,6 +10,7 @@ import ticketRoutes from './routes/ticket.js';
 import pnrStatusRoute from './routes/pnrStatus.js';
 import recentSearchesRoute from './routes/recentSearches.js';
 import travelersRoute from './routes/travelers.js';
+import paymentRoutes from './routes/payment.js';
 
 dotenv.config();
 
@@ -44,6 +45,7 @@ app.use('/api/bookings', bookingsRoute);
 app.use('/api/trains', trainsRoute);
 app.use('/api/recent-searches', recentSearchesRoute);
 app.use('/api/travelers', travelersRoute);
+app.use('/api/payment', paymentRoutes);
 
 // Add a test route to verify the server is running
 app.get('/api/health', (req, res) => {

@@ -18,6 +18,7 @@ import TrainStatus from './components/TrainStatus';
 import BookTickets from './components/BookTickets';
 import MyBookings from './components/MyBookings';
 import Settings from './components/Settings';
+import BookingSuccess from './components/BookingSuccess';
 
 function MainContent() {
   const [recentSearches, setRecentSearches] = useState([]);
@@ -145,6 +146,16 @@ function App() {
                     <ProtectedRoute>
                       <div className="container mx-auto px-4 py-8">
                         <Settings />
+                      </div>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/booking-success"
+                  element={
+                    <ProtectedRoute>
+                      <div className="container mx-auto px-4 py-8">
+                        <BookingSuccess />
                       </div>
                     </ProtectedRoute>
                   }

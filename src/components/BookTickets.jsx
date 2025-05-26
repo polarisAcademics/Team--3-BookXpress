@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+
+// Add API base URL constant
+const API_BASE_URL = 'http://localhost:3000';
 
 function BookTickets() {
   const location = useLocation();
@@ -17,6 +20,45 @@ function BookTickets() {
       address: ''
     }
   });
+
+  const [savedTravelers, setSavedTravelers] = useState([]);
+  const [showSaveTravelerModal, setShowSaveTravelerModal] = useState(false);
+  const [selectedTravelerIndex, setSelectedTravelerIndex] = useState(null);
+
+  // Fetch saved travelers when component mounts
+  useEffect(() => {
+    const fetchSavedTravelers = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          console.log('No token found, skipping traveler fetch');
+          return;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/api/travelers`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setSavedTravelers(data);
+      } catch (error) {
+        console.error('Failed to fetch saved travelers:', error);
+        // Don't show alert for 401 (unauthorized) as it's expected when not logged in
+        if (error.message && !error.message.includes('401')) {
+          alert('Failed to load saved travelers. Please try again later.');
+        }
+      }
+    };
+
+    fetchSavedTravelers();
+  }, []);
 
   const handlePassengerChange = (index, field, value) => {
     const updatedPassengers = [...formData.passengers];
@@ -55,6 +97,71 @@ function BookTickets() {
       ...prev,
       passengers: prev.passengers.filter((_, i) => i !== index)
     }));
+  };
+
+  const saveTraveler = async (passenger) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Please login to save travelers');
+        return;
+      }
+
+      console.log('Token from localStorage:', token);
+
+      const response = await fetch(`${API_BASE_URL}/api/travelers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(passenger)
+      });
+
+      console.log('Response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.log('Error response:', errorData);
+        
+        if (errorData.error === 'Token expired') {
+          localStorage.removeItem('token');
+          alert('Your session has expired. Please login again.');
+          // You might want to redirect to login page here
+          return;
+        }
+        
+        throw new Error(errorData.details || errorData.error || 'Failed to save traveler');
+      }
+
+      const savedTraveler = await response.json();
+      setSavedTravelers(prev => [...prev, savedTraveler]);
+      alert('Traveler saved successfully!');
+    } catch (error) {
+      console.error('Error saving traveler:', error);
+      if (error.message.includes('Invalid token') || error.message.includes('Token expired')) {
+        localStorage.removeItem('token');
+        alert('Your session has expired. Please login again.');
+        // You might want to redirect to login page here
+      } else {
+        alert(error.message || 'Failed to save traveler. Please try again later.');
+      }
+    }
+  };
+
+  const useSavedTraveler = (traveler) => {
+    const updatedPassengers = [...formData.passengers];
+    updatedPassengers[selectedTravelerIndex] = {
+      name: traveler.name,
+      age: traveler.age,
+      gender: traveler.gender,
+      berthPreference: traveler.berthPreference
+    };
+    setFormData(prev => ({
+      ...prev,
+      passengers: updatedPassengers
+    }));
+    setShowSaveTravelerModal(false);
   };
 
   const calculateFare = () => {
@@ -127,15 +234,39 @@ function BookTickets() {
             <div key={index} className="bg-[#2a3147] p-4 rounded-lg space-y-4">
               <div className="flex justify-between items-center">
                 <h4 className="text-white font-medium">Passenger {index + 1}</h4>
-                {index > 0 && (
+                <div className="flex space-x-2">
                   <button
                     type="button"
-                    onClick={() => removePassenger(index)}
-                    className="text-red-500 hover:text-red-400"
+                    onClick={() => {
+                      setSelectedTravelerIndex(index);
+                      setShowSaveTravelerModal(true);
+                    }}
+                    className="text-[#3b63f7] hover:text-[#2f54e0]"
                   >
-                    Remove
+                    Save
                   </button>
-                )}
+                  {savedTravelers.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedTravelerIndex(index);
+                        setShowSaveTravelerModal(true);
+                      }}
+                      className="text-[#3b63f7] hover:text-[#2f54e0]"
+                    >
+                      Use Saved
+                    </button>
+                  )}
+                  {index > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => removePassenger(index)}
+                      className="text-red-500 hover:text-red-400"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -294,6 +425,50 @@ function BookTickets() {
           Proceed to Payment
         </button>
       </form>
+
+      {/* Save Traveler Modal */}
+      {showSaveTravelerModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-[#1e2535] p-6 rounded-lg w-full max-w-md">
+            <h3 className="text-white text-lg font-semibold mb-4">Manage Traveler</h3>
+            <div className="space-y-4">
+              <button
+                onClick={() => saveTraveler(formData.passengers[selectedTravelerIndex])}
+                className="w-full bg-[#3b63f7] hover:bg-[#2f54e0] text-white py-2 rounded"
+              >
+                Save New Traveler
+              </button>
+              {savedTravelers.length > 0 && (
+                <>
+                  <div className="text-[#7a8bbf] text-sm">Or use saved traveler:</div>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {savedTravelers.map((traveler) => (
+                      <button
+                        key={traveler._id}
+                        onClick={() => useSavedTraveler(traveler)}
+                        className="w-full bg-[#2a3147] hover:bg-[#3b63f7] text-white py-2 rounded flex justify-between items-center px-4"
+                      >
+                        <span>{traveler.name} ({traveler.age} years)</span>
+                        {traveler.isDefault && (
+                          <span className="bg-[#3b63f7] text-white text-xs px-2 py-1 rounded">
+                            Default
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+              <button
+                onClick={() => setShowSaveTravelerModal(false)}
+                className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

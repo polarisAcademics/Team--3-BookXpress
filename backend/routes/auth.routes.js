@@ -1,8 +1,6 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/user.model.js';
-import bcrypt from 'bcryptjs';
-import auth from '../authMiddleware.js';
 
 const router = express.Router();
 
@@ -97,8 +95,8 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-// Login route
-router.post('/login', async (req, res) => {
+// Login route with special auth middleware
+router.post('/login', authenticateLogin, async (req, res) => {
   try {
     const { email, password } = req.body;
 

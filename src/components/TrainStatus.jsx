@@ -32,7 +32,7 @@ function TrainStatus() {
     return (
         <div className="bg-theme-secondary rounded-lg shadow-xl p-6 max-w-4xl mx-auto">
             <div className="mb-8">
-                <h2 className="text-2xl font-bold text-theme-primary mb-2">Live Train Status</h2>
+                <h2 className="text-2xl font-bold text-theme-primary mb-2">Train Routes</h2>
                 <p className="text-theme-secondary">Track your train's schedule and route</p>
             </div>
 

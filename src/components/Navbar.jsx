@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -8,12 +8,26 @@ function Navbar() {
   const { isDarkMode, toggleTheme } = useTheme();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [profileImage, setProfileImage] = useState(null);
+  const fileInputRef = useRef(null);
 
   const isActive = (path) => location.pathname === path;
 
+  const handleProfileImageChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const navItems = [
     { path: '/', label: 'Home' },
-    { path: '/live-status', label: 'Live Train Status' },
+    { path: '/live-status', label: 'Train Routes' },
     { path: '/book-tickets', label: 'Book Tickets' },
     { path: '/my-bookings', label: 'My Bookings' },
   ];
@@ -26,7 +40,7 @@ function Navbar() {
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
               <i className="fas fa-train text-[#4a6cf7] text-2xl mr-2"></i>
-              <span className="text-white font-semibold text-xl">BookXpress</span>
+              <span className={`font-semibold text-xl ${isDarkMode ? 'text-white' : 'text-black'}`}>BookXpress</span>
             </Link>
           </div>
 
@@ -39,7 +53,9 @@ function Navbar() {
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
                   isActive(item.path)
                     ? 'bg-[#4a6cf7] text-white'
-                    : 'text-gray-300 hover:bg-[#2a3147] hover:text-white'
+                    : isDarkMode
+                      ? 'text-gray-300 hover:bg-[#2a3147] hover:text-white'
+                      : 'text-black hover:bg-gray-200 hover:text-gray-800'
                 }`}
               >
                 {item.label}
@@ -60,17 +76,60 @@ function Navbar() {
             </button>
             
             {user ? (
-              <div className="flex items-center ml-4">
-                <span className="text-gray-300 mr-4">
-                  <i className="fas fa-user mr-2"></i>
-                  {user.name}
-                </span>
+              <div className="relative">
                 <button
-                  onClick={logout}
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                  onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                  className="flex items-center space-x-2 text-gray-300 hover:text-white focus:outline-none"
                 >
-                  Logout
+                  {profileImage ? (
+                    <img
+                      src={profileImage}
+                      alt="Profile"
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-[#4a6cf7] flex items-center justify-center">
+                      <i className="fas fa-user text-white"></i>
+                    </div>
+                  )}
+                  <span>{user.name}</span>
+                  <i className={`fas fa-chevron-${isProfileMenuOpen ? 'up' : 'down'} text-sm`}></i>
                 </button>
+
+                {isProfileMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-[#1e2535] ring-1 ring-black ring-opacity-5 z-50">
+                    <div className="py-1">
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className={`block w-full text-left px-4 py-2 text-sm ${isDarkMode ? 'text-gray-300 hover:bg-[#2a3147] hover:text-white' : 'text-gray-700 hover:bg-gray-200 hover:text-black'}`}
+                      >
+                        <i className="fas fa-camera mr-2"></i>
+                        Change Profile Picture
+                      </button>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleProfileImageChange}
+                        accept="image/*"
+                        className="hidden"
+                      />
+                      <Link
+                        to="/settings"
+                        className={`block px-4 py-2 text-sm ${isDarkMode ? 'text-gray-300 hover:bg-[#2a3147] hover:text-white' : 'text-gray-700 hover:bg-gray-200 hover:text-black'}`}
+                      >
+                        <i className="fas fa-cog mr-2"></i>
+                        Settings
+                      </Link>
+                      <button
+                        onClick={logout}
+                        className={`block w-full text-left px-4 py-2 text-sm ${isDarkMode ? 'text-red-500 hover:bg-[#2a3147] hover:text-red-400' : 'text-red-600 hover:bg-gray-200 hover:text-red-700'}`}
+                      >
+                        <i className="fas fa-sign-out-alt mr-2"></i>
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex items-center ml-4 space-x-4">
@@ -112,7 +171,9 @@ function Navbar() {
               className={`block px-4 py-2 text-sm font-medium ${
                 isActive(item.path)
                   ? 'bg-[#4a6cf7] text-white'
-                  : 'text-gray-300 hover:bg-[#2a3147] hover:text-white'
+                  : isDarkMode
+                    ? 'text-gray-300 hover:bg-[#2a3147] hover:text-white'
+                    : 'text-black hover:bg-gray-200 hover:text-gray-800'
               }`}
               onClick={() => setIsMobileMenuOpen(false)}
             >
@@ -131,17 +192,43 @@ function Navbar() {
           
           {user ? (
             <div className="px-4 py-2">
-              <div className="text-gray-300 mb-2">
-                <i className="fas fa-user mr-2"></i>
-                {user.name}
+              <div className="flex items-center space-x-2 mb-2">
+                {profileImage ? (
+                  <img
+                    src={profileImage}
+                    alt="Profile"
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-[#4a6cf7] flex items-center justify-center">
+                    <i className="fas fa-user text-white"></i>
+                  </div>
+                )}
+                <span className="text-gray-300">{user.name}</span>
               </div>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className={`w-full text-left px-4 py-2 text-sm ${isDarkMode ? 'text-gray-300 hover:bg-[#2a3147] hover:text-white' : 'text-gray-700 hover:bg-gray-200 hover:text-black'}`}
+              >
+                <i className="fas fa-camera mr-2"></i>
+                Change Profile Picture
+              </button>
+              <Link
+                to="/settings"
+                className={`block w-full text-left px-4 py-2 text-sm ${isDarkMode ? 'text-gray-300 hover:bg-[#2a3147] hover:text-white' : 'text-gray-700 hover:bg-gray-200 hover:text-black'}`}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <i className="fas fa-cog mr-2"></i>
+                Settings
+              </Link>
               <button
                 onClick={() => {
                   logout();
                   setIsMobileMenuOpen(false);
                 }}
-                className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                className={`w-full text-left px-4 py-2 text-sm ${isDarkMode ? 'text-red-500 hover:bg-[#2a3147] hover:text-red-400' : 'text-red-600 hover:bg-gray-200 hover:text-red-700'}`}
               >
+                <i className="fas fa-sign-out-alt mr-2"></i>
                 Logout
               </button>
             </div>

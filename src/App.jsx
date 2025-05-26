@@ -17,6 +17,7 @@ import Footer from './components/Footer';
 import TrainStatus from './components/TrainStatus';
 import BookTickets from './components/BookTickets';
 import MyBookings from './components/MyBookings';
+import Settings from './components/Settings';
 
 function MainContent() {
   const [recentSearches, setRecentSearches] = useState([]);
@@ -134,6 +135,16 @@ function App() {
                     <ProtectedRoute>
                       <div className="container mx-auto px-4 py-8">
                         <MyBookings />
+                      </div>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/settings"
+                  element={
+                    <ProtectedRoute>
+                      <div className="container mx-auto px-4 py-8">
+                        <Settings />
                       </div>
                     </ProtectedRoute>
                   }

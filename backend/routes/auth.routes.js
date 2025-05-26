@@ -1,7 +1,6 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/user.model.js';
-import { authenticateToken, authenticateLogin } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -168,6 +167,45 @@ router.post('/refresh-token', async (req, res) => {
   } catch (error) {
     console.error('Token refresh error:', error);
     res.status(401).json({ message: 'Invalid refresh token' });
+  }
+});
+
+// Change password endpoint
+router.post('/change-password', auth, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  console.log('Change password request received for user ID:', req.user.id);
+  console.log('Current password provided:', currentPassword ? '[provided]' : '[not provided]');
+  console.log('New password provided:', newPassword ? '[provided]' : '[not provided]');
+
+  if (!currentPassword || !newPassword) {
+    console.log('Missing required fields');
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      console.log('User not found for ID:', req.user.id);
+      return res.status(404).json({ error: 'User not found' });
+    }
+    console.log('User found:', user.email);
+
+    const isMatch = await user.comparePassword(currentPassword);
+    console.log('Password comparison result:', isMatch);
+
+    if (!isMatch) {
+      console.log('Current password incorrect');
+      return res.status(400).json({ error: 'Current password is incorrect' });
+    }
+
+    user.password = newPassword; // This should trigger the pre-save hook
+    console.log('New password assigned, attempting to save...');
+    await user.save();
+    console.log('Password saved successfully');
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error changing password:', err);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 

@@ -1,6 +1,7 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/user.model.js';
+import { authenticateLogin, authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -171,7 +172,7 @@ router.post('/refresh-token', async (req, res) => {
 });
 
 // Change password endpoint
-router.post('/change-password', auth, async (req, res) => {
+router.post('/change-password', authenticateToken, async (req, res) => {
   const { currentPassword, newPassword } = req.body;
   console.log('Change password request received for user ID:', req.user.id);
   console.log('Current password provided:', currentPassword ? '[provided]' : '[not provided]');

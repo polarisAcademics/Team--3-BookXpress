@@ -7,6 +7,12 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Function to update user data in state and localStorage
+  const updateUser = (newUserData) => {
+    setUser(newUserData);
+    localStorage.setItem('user', JSON.stringify(newUserData));
+  };
+
   useEffect(() => {
     // Check if user is logged in
     const token = localStorage.getItem('token');
@@ -81,6 +87,7 @@ export const AuthProvider = ({ children }) => {
     login,
     signup,
     logout,
+    updateUser, // Expose updateUser function
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

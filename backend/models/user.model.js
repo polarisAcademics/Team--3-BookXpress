@@ -19,6 +19,9 @@ const userSchema = new mongoose.Schema({
     required: true,
     minlength: 6,
   },
+  profilePicture: {
+    type: String,
+  },
   provider: {
     type: String,
     enum: ['local', 'google', 'github'],

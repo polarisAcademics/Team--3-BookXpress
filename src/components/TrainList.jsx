@@ -5,13 +5,11 @@ function TrainList({ trains, selectedClass, appliedDiscount, quota, onBookNow })
   const navigate = useNavigate();
 
   const handleBookNow = (train) => {
-    // Navigate to book tickets page with train details
-    // Pass selectedTrain, selectedClass, and appliedDiscount
     navigate('/book-tickets', {
       state: {
         selectedTrain: train,
         selectedClass: selectedClass,
-        appliedDiscount: appliedDiscount // Pass the applied discount
+        appliedDiscount: appliedDiscount
       }
     });
   };
@@ -27,98 +25,112 @@ function TrainList({ trains, selectedClass, appliedDiscount, quota, onBookNow })
   return (
     <div className="space-y-4">
       {trains.map((train) => {
-        console.log('TrainList rendering train fare details:', {
-            trainId: train.id,
-            trainFare: JSON.stringify(train.fare),
-            selectedClass: selectedClass,
-            appliedDiscount: JSON.stringify(appliedDiscount),
-            quota: quota
-        });
+        // Ensure train object has all required properties with fallbacks
+        const trainData = {
+          id: train.trainNumber || train.id,
+          name: train.trainName || train.name,
+          from: train.fromStation?.name || train.from,
+          to: train.toStation?.name || train.to,
+          departure: train.fromStation?.departure || train.departure,
+          arrival: train.toStation?.arrival || train.arrival,
+          duration: train.duration,
+          classes: train.availableClasses || train.classes || ['1A', '2A', '3A', 'SL'],
+          fare: train.fare || {
+            '1A': 1500,
+            '2A': 800,
+            '3A': 500,
+            'SL': 250
+          },
+          days: train.runningDays || train.days || ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'],
+          type: train.trainType || train.type || 'Express'
+        };
+
         return (
-        <div key={train.id} className="bg-[#1e2535] rounded-lg p-4 shadow-lg">
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <h3 className="text-white font-semibold text-lg">{train.name}</h3>
-              <p className="text-[#7a8bbf] text-sm">Train #{train.id}</p>
+          <div key={trainData.id} className="bg-[#1e2535] rounded-lg p-4 shadow-lg">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-white font-semibold text-lg">{trainData.name}</h3>
+                <p className="text-[#7a8bbf] text-sm">Train #{trainData.id}</p>
+              </div>
+              <span className="bg-[#3b63f7] text-white text-xs px-2 py-1 rounded">
+                {trainData.type}
+              </span>
             </div>
-            <span className="bg-[#3b63f7] text-white text-xs px-2 py-1 rounded">
-              {train.type}
-            </span>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-4 mb-4">
-            <div>
-              <p className="text-white font-semibold">{train.departure}</p>
-              <p className="text-[#7a8bbf] text-sm">{train.from}</p>
+            
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <div>
+                <p className="text-white font-semibold">{trainData.departure}</p>
+                <p className="text-[#7a8bbf] text-sm">{trainData.from}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-[#7a8bbf] text-sm">{trainData.duration}</p>
+                <div className="h-0.5 bg-[#3b63f7] my-2"></div>
+              </div>
+              <div className="text-right">
+                <p className="text-white font-semibold">{trainData.arrival}</p>
+                <p className="text-[#7a8bbf] text-sm">{trainData.to}</p>
+              </div>
             </div>
-            <div className="text-center">
-              <p className="text-[#7a8bbf] text-sm">{train.duration}</p>
-              <div className="h-0.5 bg-[#3b63f7] my-2"></div>
-            </div>
-            <div className="text-right">
-              <p className="text-white font-semibold">{train.arrival}</p>
-              <p className="text-[#7a8bbf] text-sm">{train.to}</p>
-            </div>
-          </div>
 
-          <div className="flex justify-between items-center">
-            <div className="flex gap-2">
-              {train.classes.map((cls) => (
-                <span 
-                  key={cls}
-                  className={`text-xs px-2 py-1 rounded ${
-                    selectedClass === cls 
-                      ? 'bg-[#3b63f7] text-white' 
-                      : 'bg-[#2a3147] text-[#7a8bbf]'
-                  }`}
-                >
-                  {cls}
-                </span>
-              ))}
+            <div className="flex justify-between items-center">
+              <div className="flex gap-2">
+                {trainData.classes.map((cls) => (
+                  <span 
+                    key={cls}
+                    className={`text-xs px-2 py-1 rounded ${
+                      selectedClass === cls 
+                        ? 'bg-[#3b63f7] text-white' 
+                        : 'bg-[#2a3147] text-[#7a8bbf]'
+                    }`}
+                  >
+                    {cls}
+                  </span>
+                ))}
+              </div>
+              <div className="text-right">
+                <p className="text-white font-semibold">
+                  {appliedDiscount ? (
+                    <>
+                      <span className="line-through text-[#7a8bbf] text-sm mr-2">
+                        ₹{trainData.fare[selectedClass] || trainData.fare['3A']}
+                      </span>
+                      ₹{
+                        appliedDiscount.code === 'SENIOR10' && quota !== 'senior'
+                          ? trainData.fare[selectedClass] || trainData.fare['3A']
+                          : appliedDiscount.type === 'percent'
+                            ? Math.round((trainData.fare[selectedClass] || trainData.fare['3A']) * (1 - appliedDiscount.value / 100))
+                            : Math.max(0, (trainData.fare[selectedClass] || trainData.fare['3A']) - appliedDiscount.value)
+                      }
+                    </>
+                  ) : (
+                    `₹${trainData.fare[selectedClass] || trainData.fare['3A']}`
+                  )}
+                </p>
+                <p className="text-[#7a8bbf] text-sm">Starting Fare</p>
+              </div>
             </div>
-            <div className="text-right">
-              <p className="text-white font-semibold">
-                {appliedDiscount ? (
-                  <>
-                    <span className="line-through text-[#7a8bbf] text-sm mr-2">
-                      ₹{train.fare[selectedClass] || train.fare['3A']}
-                    </span>
-                    ₹{
-                      appliedDiscount.code === 'SENIOR10' && quota !== 'senior'
-                        ? train.fare[selectedClass] || train.fare['3A']
-                        : appliedDiscount.type === 'percent'
-                          ? Math.round((train.fare[selectedClass] || train.fare['3A']) * (1 - appliedDiscount.value / 100))
-                          : Math.max(0, (train.fare[selectedClass] || train.fare['3A']) - appliedDiscount.value)
-                    }
-                  </>
-                ) : (
-                  `₹${train.fare[selectedClass] || train.fare['3A']}`
-                )}
-              </p>
-              <p className="text-[#7a8bbf] text-sm">Starting Fare</p>
-            </div>
-          </div>
 
-          <div className="mt-4 flex justify-between items-center">
-            <div className="flex gap-2">
-              {train.days.map((day) => (
-                <span 
-                  key={day}
-                  className="text-[#7a8bbf] text-xs bg-[#2a3147] px-2 py-1 rounded"
-                >
-                  {day}
-                </span>
-              ))}
+            <div className="mt-4 flex justify-between items-center">
+              <div className="flex gap-2">
+                {trainData.days.map((day) => (
+                  <span 
+                    key={day}
+                    className="text-[#7a8bbf] text-xs bg-[#2a3147] px-2 py-1 rounded"
+                  >
+                    {day}
+                  </span>
+                ))}
+              </div>
+              <button 
+                onClick={() => onBookNow(trainData)}
+                className="bg-[#3b63f7] hover:bg-[#2f54e0] text-white px-4 py-2 rounded text-sm"
+              >
+                Book Now
+              </button>
             </div>
-            <button 
-              onClick={() => onBookNow(train)} // Use onBookNow prop for navigation
-              className="bg-[#3b63f7] hover:bg-[#2f54e0] text-white px-4 py-2 rounded text-sm"
-            >
-              Book Now
-            </button>
           </div>
-        </div>
-      )})}
+        );
+      })}
     </div>
   );
 }

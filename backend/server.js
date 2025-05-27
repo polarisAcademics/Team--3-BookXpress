@@ -11,6 +11,11 @@ import pnrStatusRoute from './routes/pnrStatus.js';
 import recentSearchesRoute from './routes/recentSearches.js';
 import travelersRoute from './routes/travelers.js';
 import paymentRoutes from './routes/payment.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -18,11 +23,15 @@ const app = express();
 
 // Configure CORS with specific options
 app.use(cors({
-  origin: 'http://localhost:5173', // Your frontend URL
+  origin: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL : ['http://localhost:5173', 'http://localhost:5174'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
+
+// Serve static files from the 'uploads' directory
+// Make sure the 'uploads' directory exists
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // JSON parsing with error handling
 app.use(express.json({

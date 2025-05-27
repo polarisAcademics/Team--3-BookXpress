@@ -2,8 +2,13 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/user.model.js';
 import { authenticateLogin, authenticateToken } from '../middleware/auth.js';
+import multer from 'multer';
 
 const router = express.Router();
+
+// Set up multer for file uploads
+// TODO: Configure storage location and filename
+const upload = multer({ dest: 'uploads/' }); // Temporary destination
 
 // Signup route
 router.post('/signup', async (req, res) => {
@@ -206,6 +211,62 @@ router.post('/change-password', authenticateToken, async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('Error changing password:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Update profile endpoint
+router.post('/update-profile', authenticateToken, upload.single('profilePicture'), async (req, res) => {
+  const { name, phone } = req.body; // Access text fields
+  const profilePictureFile = req.file; // Access the uploaded file
+
+  const userId = req.user._id;
+  console.log(`Profile update request received for user ID: ${userId}`);
+  console.log('Received data:', { name, phone });
+  console.log('Received file:', profilePictureFile);
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      console.log('User not found for ID:', userId);
+      return res.status(404).json({ error: 'User not found' });
+    }
+    console.log('User found:', user.email);
+
+    // Update fields if provided
+    if (name !== undefined) {
+      user.name = name;
+      console.log('Updating name to:', name);
+    }
+    if (phone !== undefined) {
+      user.phone = phone;
+      console.log('Updating phone to:', phone);
+    }
+
+    // Handle profile picture update
+    if (profilePictureFile) {
+      // TODO: Implement actual file storage (e.g., to a cloud storage or a permanent directory)
+      // For now, just save the temporary path or a placeholder
+      user.profilePicture = `/uploads/${profilePictureFile.filename}`; // Return the URL for static access
+      console.log('Updating profile picture path to:', profilePictureFile.path);
+    }
+
+    await user.save();
+    console.log('Profile saved successfully');
+
+    // Return updated user info (excluding sensitive data like password)
+    res.json({
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone, // Include phone in the response
+        profilePicture: user.profilePicture, // Include profile picture URL
+      },
+    });
+  } catch (err) {
+    console.error('Error updating profile:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });

@@ -4,7 +4,7 @@ import fetch from 'node-fetch';
 const router = express.Router();
 const API_KEY = '9a43e9d002mshed90898683d9dd3p143a5fjsn7e1d2c2f1ab7';
 
-router.get('/pnr-status', async (req, res) => {
+router.get('/', async (req, res) => {
   const { pnr } = req.query;
   
   console.log('Received PNR status request for:', pnr);

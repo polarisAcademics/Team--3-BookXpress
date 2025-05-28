@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useTheme } from '../context/ThemeContext';
 
 function PNRStatus() {
   const [pnr, setPnr] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [pnrStatus, setPnrStatus] = useState(null);
+  const { isDarkMode } = useTheme();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -106,18 +108,18 @@ function PNRStatus() {
 
       {pnrStatus && pnrStatus.data && (
         <div className="px-4 pb-4">
-          <div className="bg-[#2a3147] rounded-md p-4 space-y-3">
+          <div className={`rounded-md p-4 space-y-3 ${isDarkMode ? 'bg-[#2a3147] text-white' : 'bg-white text-gray-900'}`}>
             {/* Journey Details */}
             <div className="border-b border-white/10 pb-3">
-              <h4 className="text-white font-semibold text-sm mb-2">Journey Details</h4>
+              <h4 className={`font-semibold text-sm mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Journey Details</h4>
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-white/80 text-xs sm:text-sm">PNR Number</span>
-                  <span className="text-white font-semibold text-xs sm:text-sm">{pnrStatus.data.pnrNumber}</span>
+                  <span className={`${isDarkMode ? 'text-white/80' : 'text-gray-600'} text-xs sm:text-sm`}>PNR Number</span>
+                  <span className={`font-semibold text-xs sm:text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{pnrStatus.data.pnrNumber}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-white/80 text-xs sm:text-sm">Date of Journey</span>
-                  <span className="text-white font-semibold text-xs sm:text-sm">
+                  <span className={`${isDarkMode ? 'text-white/80' : 'text-gray-600'} text-xs sm:text-sm`}>Date of Journey</span>
+                  <span className={`font-semibold text-xs sm:text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                     {formatDate(pnrStatus.data.dateOfJourney)}
                   </span>
                 </div>
@@ -126,55 +128,55 @@ function PNRStatus() {
 
             {/* Train Details */}
             <div className="border-b border-white/10 pb-3">
-              <h4 className="text-white font-semibold text-sm mb-2">Train Details</h4>
+              <h4 className={`font-semibold text-sm mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Train Details</h4>
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-white/80 text-xs sm:text-sm">Train Number</span>
-                  <span className="text-white font-semibold text-xs sm:text-sm">{pnrStatus.data.trainNumber}</span>
+                  <span className={`${isDarkMode ? 'text-white/80' : 'text-gray-600'} text-xs sm:text-sm`}>Train Number</span>
+                  <span className={`font-semibold text-xs sm:text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{pnrStatus.data.trainNumber}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-white/80 text-xs sm:text-sm">Train Name</span>
-                  <span className="text-white font-semibold text-xs sm:text-sm">{pnrStatus.data.trainName}</span>
+                  <span className={`${isDarkMode ? 'text-white/80' : 'text-gray-600'} text-xs sm:text-sm`}>Train Name</span>
+                  <span className={`font-semibold text-xs sm:text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{pnrStatus.data.trainName}</span>
                 </div>
               </div>
             </div>
 
             {/* Station Details */}
             <div className="border-b border-white/10 pb-3">
-              <h4 className="text-white font-semibold text-sm mb-2">Station Details</h4>
+              <h4 className={`font-semibold text-sm mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Station Details</h4>
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-white/80 text-xs sm:text-sm">From</span>
-                  <span className="text-white font-semibold text-xs sm:text-sm">{pnrStatus.data.sourceStation}</span>
+                  <span className={`${isDarkMode ? 'text-white/80' : 'text-gray-600'} text-xs sm:text-sm`}>From</span>
+                  <span className={`font-semibold text-xs sm:text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{pnrStatus.data.sourceStation}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-white/80 text-xs sm:text-sm">To</span>
-                  <span className="text-white font-semibold text-xs sm:text-sm">{pnrStatus.data.destinationStation}</span>
+                  <span className={`${isDarkMode ? 'text-white/80' : 'text-gray-600'} text-xs sm:text-sm`}>To</span>
+                  <span className={`font-semibold text-xs sm:text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{pnrStatus.data.destinationStation}</span>
                 </div>
               </div>
             </div>
 
             {/* Status Information */}
             <div>
-              <h4 className="text-white font-semibold text-sm mb-2">Status Information</h4>
+              <h4 className={`font-semibold text-sm mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Status Information</h4>
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-white/80 text-xs sm:text-sm">Class</span>
-                  <span className="text-white font-semibold text-xs sm:text-sm">{pnrStatus.data.journeyClass}</span>
+                  <span className={`${isDarkMode ? 'text-white/80' : 'text-gray-600'} text-xs sm:text-sm`}>Class</span>
+                  <span className={`font-semibold text-xs sm:text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{pnrStatus.data.journeyClass}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-white/80 text-xs sm:text-sm">Chart Status</span>
-                  <span className="text-white font-semibold text-xs sm:text-sm">{pnrStatus.data.chartStatus}</span>
+                  <span className={`${isDarkMode ? 'text-white/80' : 'text-gray-600'} text-xs sm:text-sm`}>Chart Status</span>
+                  <span className={`font-semibold text-xs sm:text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{pnrStatus.data.chartStatus}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-white/80 text-xs sm:text-sm">Passenger Status</span>
-                  <span className="text-white font-semibold text-xs sm:text-sm">
+                  <span className={`${isDarkMode ? 'text-white/80' : 'text-gray-600'} text-xs sm:text-sm`}>Passenger Status</span>
+                  <span className={`font-semibold text-xs sm:text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                     {pnrStatus.data.passengerList && pnrStatus.data.passengerList[0]?.currentStatus}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-white/80 text-xs sm:text-sm">Last Updated</span>
-                  <span className="text-white font-semibold text-xs sm:text-sm">
+                  <span className={`${isDarkMode ? 'text-white/80' : 'text-gray-600'} text-xs sm:text-sm`}>Last Updated</span>
+                  <span className={`font-semibold text-xs sm:text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                     {formatDate(pnrStatus.generatedTimeStamp)}
                   </span>
                 </div>

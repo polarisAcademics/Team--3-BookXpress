@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTheme } from '../context/ThemeContext';
 
 const API_BASE_URL = 'http://localhost:3000';
 
@@ -7,6 +8,7 @@ function TrainStatus() {
     const [loading, setLoading] = useState(false);
     const [trainStatus, setTrainStatus] = useState(null);
     const [error, setError] = useState('');
+    const { isDarkMode } = useTheme();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -14,7 +16,7 @@ function TrainStatus() {
         setLoading(true);
         setTrainStatus(null);
         try {
-            const response = await fetch(`${API_BASE_URL}/api/trainstatus?trainNumber=${trainNumber}`);
+            const response = await fetch(`${API_BASE_URL}/api/train-status/trainstatus?trainNumber=${trainNumber}`);
             const data = await response.json();
             console.log('API response:', data);
             const trainData = data.body?.[0]?.trains?.[0];
@@ -84,34 +86,34 @@ function TrainStatus() {
 
             {trainStatus && !error && (
                 <div className="mt-8">
-                    <h3 className="text-xl font-semibold text-white mb-4">Train Information</h3>
-                    <div className="bg-[#2a3147] rounded-lg p-6 space-y-4">
+                    <h3 className="text-xl font-semibold text-theme-primary mb-4">Train Information</h3>
+                    <div className={`rounded-lg p-6 space-y-4 ${typeof isDarkMode !== 'undefined' && isDarkMode ? 'bg-[#2a3147] text-white' : 'bg-white text-gray-900'}`}>
                         <div>
-                            <p className="text-gray-400 text-sm">Train Number</p>
-                            <p className="text-white font-medium">{trainStatus.trainNumber}</p>
+                            <p className={`text-sm ${typeof isDarkMode !== 'undefined' && isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Train Number</p>
+                            <p className="font-medium">{trainStatus.trainNumber}</p>
                         </div>
                         <div>
-                            <p className="text-gray-400 text-sm">Train Name</p>
-                            <p className="text-white font-medium">{trainStatus.trainName}</p>
+                            <p className={`text-sm ${typeof isDarkMode !== 'undefined' && isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Train Name</p>
+                            <p className="font-medium">{trainStatus.trainName}</p>
                         </div>
                         <div>
-                            <p className="text-gray-400 text-sm">From</p>
-                            <p className="text-white font-medium">{trainStatus.origin} ({trainStatus.stationFrom})</p>
+                            <p className={`text-sm ${typeof isDarkMode !== 'undefined' && isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>From</p>
+                            <p className="font-medium">{trainStatus.origin} ({trainStatus.stationFrom})</p>
                         </div>
                         <div>
-                            <p className="text-gray-400 text-sm">To</p>
-                            <p className="text-white font-medium">{trainStatus.destination} ({trainStatus.stationTo})</p>
+                            <p className={`text-sm ${typeof isDarkMode !== 'undefined' && isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>To</p>
+                            <p className="font-medium">{trainStatus.destination} ({trainStatus.stationTo})</p>
                         </div>
                         <div>
-                            <p className="text-gray-400 text-sm">Journey Classes</p>
-                            <p className="text-white font-medium">{trainStatus.journeyClasses?.join(', ')}</p>
+                            <p className={`text-sm ${typeof isDarkMode !== 'undefined' && isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Journey Classes</p>
+                            <p className="font-medium">{trainStatus.journeyClasses?.join(', ')}</p>
                         </div>
                         <div>
-                            <p className="text-gray-400 text-sm mb-2">Schedule</p>
+                            <p className={`text-sm mb-2 ${typeof isDarkMode !== 'undefined' && isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Schedule</p>
                             <div className="overflow-x-auto">
-                                <table className="min-w-full text-xs text-white">
+                                <table className={`min-w-full text-xs ${typeof isDarkMode !== 'undefined' && isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                                     <thead>
-                                        <tr className="bg-[#232b3a]">
+                                        <tr className={typeof isDarkMode !== 'undefined' && isDarkMode ? 'bg-[#232b3a]' : 'bg-gray-100'}>
                                             <th className="px-4 py-2 text-left whitespace-nowrap">Station</th>
                                             <th className="px-4 py-2 text-left">Arrival</th>
                                             <th className="px-4 py-2 text-left">Departure</th>
@@ -121,7 +123,7 @@ function TrainStatus() {
                                     </thead>
                                     <tbody>
                                         {trainStatus.schedule?.map((stop, idx) => (
-                                            <tr key={idx} className={idx % 2 === 0 ? 'bg-[#232b3a]' : ''}>
+                                            <tr key={idx} className={typeof isDarkMode !== 'undefined' && isDarkMode ? (idx % 2 === 0 ? 'bg-[#232b3a]' : '') : (idx % 2 === 0 ? 'bg-gray-50' : '')}>
                                                 <td className="px-4 py-2 text-left whitespace-nowrap">{stop.stationName} ({stop.stationCode})</td>
                                                 <td className="px-4 py-2 text-left">{stop.arrivalTime}</td>
                                                 <td className="px-4 py-2 text-left">{stop.departureTime}</td>

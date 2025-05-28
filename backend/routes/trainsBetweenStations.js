@@ -5,7 +5,7 @@ import { findStationCode } from './stations.js';
 const router = express.Router();
 
 // RapidAPI configuration
-const RAPIDAPI_KEY = 'd15f05b26amshc2c90427a2f6385p119c29jsn71e9babc3196';
+const RAPIDAPI_KEY = 'ebf7e09943mshf9cc7351263f52fp1112c3jsn7f75bb41f2be';
 const RAPIDAPI_HOST = 'irctc1.p.rapidapi.com';
 
 // Rate limiting configuration

@@ -31,7 +31,7 @@ function MainContent() {
       return;
     }
     try {
-      const res = await fetch('http://localhost:3001/api/recent-searches', {
+      const res = await fetch('http://localhost:3000/api/recent-searches', {
         headers: {
           Authorization: `Bearer ${token}`,
         },

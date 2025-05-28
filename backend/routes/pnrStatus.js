@@ -2,7 +2,7 @@ import express from 'express';
 import fetch from 'node-fetch';
 
 const router = express.Router();
-const API_KEY = 'd15f05b26amshc2c90427a2f6385p119c29jsn71e9babc3196';
+const API_KEY = '9a43e9d002mshed90898683d9dd3p143a5fjsn7e1d2c2f1ab7';
 
 router.get('/', async (req, res) => {
   const { pnr } = req.query;

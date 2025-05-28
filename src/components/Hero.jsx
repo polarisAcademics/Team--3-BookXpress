@@ -112,44 +112,31 @@ function Hero({ appliedDiscount, onSearch }) {
         throw new Error(response.message || 'Failed to fetch trains');
       }
 
+      // Transform the API response to match TrainList's expected format
       const transformedTrains = response.trains.map(train => ({
         trainNumber: train.trainNumber,
         trainName: train.trainName,
-        departure: train.fromStation.departure,
-        arrival: train.toStation.arrival,
+        fromStation: {
+          name: train.fromStation.name,
+          departure: train.fromStation.departure
+        },
+        toStation: {
+          name: train.toStation.name,
+          arrival: train.toStation.arrival
+        },
         duration: train.duration,
-        classes: train.availableClasses,
+        availableClasses: train.availableClasses,
+        runningDays: train.runningDays,
+        trainType: train.trainType,
         fare: {
-          "1A": 1500,
-          "2A": 800,
-          "3A": 500,
-          "SL": 250
+          '1A': 1500,
+          '2A': 800,
+          '3A': 500,
+          'SL': 250
         }
       }));
 
-      const discountedResults = transformedTrains.map(train => {
-        let discountedFare = { ...train.fare };
-        if (appliedDiscount) {
-          if (appliedDiscount.code === 'SENIOR10' && formData.quota !== 'senior') {
-            console.log('Senior citizen discount not applied - quota not senior');
-            return { ...train, fare: train.fare };
-          }
-          
-          discountedFare = Object.keys(train.fare).reduce((acc, className) => {
-            let baseFare = train.fare[className];
-            if (appliedDiscount.type === 'percent') {
-              baseFare = baseFare * (1 - appliedDiscount.value / 100);
-            } else if (appliedDiscount.type === 'flat') {
-              baseFare = Math.max(0, baseFare - appliedDiscount.value);
-            }
-            acc[className] = Math.round(baseFare);
-            return acc;
-          }, {});
-        }
-        return { ...train, fare: discountedFare };
-      });
-
-      setSearchResults(discountedResults);
+      setSearchResults(transformedTrains);
       setShowResults(true);
 
       // Save search to backend and update recent searches

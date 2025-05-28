@@ -46,29 +46,29 @@ function TrainList({ trains, selectedClass, appliedDiscount, quota, onBookNow })
         };
 
         return (
-          <div key={trainData.id} className="bg-[#1e2535] rounded-lg p-4 shadow-lg">
+          <div key={trainData.id} className="bg-theme-secondary rounded-lg p-4 shadow-lg">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="text-white font-semibold text-lg">{trainData.name}</h3>
-                <p className="text-[#7a8bbf] text-sm">Train #{trainData.id}</p>
+                <h3 className="text-theme-primary font-semibold text-lg">{trainData.name}</h3>
+                <p className="text-theme-secondary text-sm">Train #{trainData.id}</p>
               </div>
-              <span className="bg-[#3b63f7] text-white text-xs px-2 py-1 rounded">
+              <span className="bg-[var(--accent-color)] text-white text-xs px-2 py-1 rounded">
                 {trainData.type}
               </span>
             </div>
             
             <div className="grid grid-cols-3 gap-4 mb-4">
               <div>
-                <p className="text-white font-semibold">{trainData.departure}</p>
-                <p className="text-[#7a8bbf] text-sm">{trainData.from}</p>
+                <p className="text-theme-primary font-semibold">{trainData.departure}</p>
+                <p className="text-theme-secondary text-sm">{trainData.from}</p>
               </div>
               <div className="text-center">
-                <p className="text-[#7a8bbf] text-sm">{trainData.duration}</p>
-                <div className="h-0.5 bg-[#3b63f7] my-2"></div>
+                <p className="text-theme-secondary text-sm">{trainData.duration}</p>
+                <div className="h-0.5 bg-[var(--accent-color)] my-2"></div>
               </div>
               <div className="text-right">
-                <p className="text-white font-semibold">{trainData.arrival}</p>
-                <p className="text-[#7a8bbf] text-sm">{trainData.to}</p>
+                <p className="text-theme-primary font-semibold">{trainData.arrival}</p>
+                <p className="text-theme-secondary text-sm">{trainData.to}</p>
               </div>
             </div>
 
@@ -79,8 +79,8 @@ function TrainList({ trains, selectedClass, appliedDiscount, quota, onBookNow })
                     key={cls}
                     className={`text-xs px-2 py-1 rounded ${
                       selectedClass === cls 
-                        ? 'bg-[#3b63f7] text-white' 
-                        : 'bg-[#2a3147] text-[#7a8bbf]'
+                        ? 'bg-[var(--accent-color)] text-white' 
+                        : 'bg-theme-primary text-theme-secondary border border-theme'
                     }`}
                   >
                     {cls}
@@ -88,10 +88,10 @@ function TrainList({ trains, selectedClass, appliedDiscount, quota, onBookNow })
                 ))}
               </div>
               <div className="text-right">
-                <p className="text-white font-semibold">
+                <p className="text-theme-primary font-semibold">
                   {appliedDiscount ? (
                     <>
-                      <span className="line-through text-[#7a8bbf] text-sm mr-2">
+                      <span className="line-through text-theme-secondary text-sm mr-2">
                         ₹{trainData.fare[selectedClass] || trainData.fare['3A']}
                       </span>
                       ₹{
@@ -106,7 +106,7 @@ function TrainList({ trains, selectedClass, appliedDiscount, quota, onBookNow })
                     `₹${trainData.fare[selectedClass] || trainData.fare['3A']}`
                   )}
                 </p>
-                <p className="text-[#7a8bbf] text-sm">Starting Fare</p>
+                <p className="text-theme-secondary text-sm">Starting Fare</p>
               </div>
             </div>
 
@@ -115,7 +115,7 @@ function TrainList({ trains, selectedClass, appliedDiscount, quota, onBookNow })
                 {trainData.days.map((day) => (
                   <span 
                     key={day}
-                    className="text-[#7a8bbf] text-xs bg-[#2a3147] px-2 py-1 rounded"
+                    className="text-theme-secondary text-xs bg-theme-primary border border-theme px-2 py-1 rounded"
                   >
                     {day}
                   </span>
@@ -123,7 +123,7 @@ function TrainList({ trains, selectedClass, appliedDiscount, quota, onBookNow })
               </div>
               <button 
                 onClick={() => onBookNow(trainData)}
-                className="bg-[#3b63f7] hover:bg-[#2f54e0] text-white px-4 py-2 rounded text-sm"
+                className="bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] text-white px-4 py-2 rounded text-sm"
               >
                 Book Now
               </button>

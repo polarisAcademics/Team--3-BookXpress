@@ -18,6 +18,7 @@ export const trainsService = {
           date
         }
       });
+      console.log('API Response:', response.data);
       return response.data;
     } catch (error) {
       console.error('API Error:', error.response?.data || error.message);

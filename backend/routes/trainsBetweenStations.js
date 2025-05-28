@@ -5,7 +5,7 @@ import { findStationCode } from './stations.js';
 const router = express.Router();
 
 // RapidAPI configuration
-const RAPIDAPI_KEY = '569a1c6042msh3f22dc98fdc0250p1bfb4bjsn2cbebcfcbde6';
+const RAPIDAPI_KEY = 'ec516f3c6emsh37495040e73e766p1f6312jsna2f2fc4641b2';
 const RAPIDAPI_HOST = 'irctc1.p.rapidapi.com';
 
 // Rate limiting configuration
@@ -95,11 +95,16 @@ router.get('/', rateLimiter, async (req, res) => {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error('API Error Response:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorData
+      });
       throw new Error(errorData.message || `API request failed with status ${response.status}`);
     }
 
     const responseData = await response.json();
-    console.log('API Response:', responseData);
+    console.log('Raw API Response:', JSON.stringify(responseData, null, 2));
 
     // Transform the response to match frontend expectations
     const transformedData = {
@@ -130,6 +135,8 @@ router.get('/', rateLimiter, async (req, res) => {
         journeyDate: train.train_date
       })) : []
     };
+
+    console.log('Transformed Data:', JSON.stringify(transformedData, null, 2));
 
     res.json(transformedData);
   } catch (error) {

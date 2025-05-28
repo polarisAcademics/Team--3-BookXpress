@@ -19,13 +19,29 @@ const travelerSchema = new mongoose.Schema({
   },
   gender: {
     type: String,
-    enum: ['male', 'female', 'other'],
+    enum: ['Male', 'Female', 'Other'],
     required: true
   },
-  berthPreference: {
+  idProofType: {
     type: String,
-    enum: ['lower', 'middle', 'upper', 'side-lower', 'side-upper'],
-    default: 'lower'
+    trim: true
+  },
+  idNumber: {
+    type: String,
+    trim: true
+  },
+  phoneNumber: {
+    type: String,
+    trim: true
+  },
+  seatPreference: {
+    type: String,
+    trim: true
+  },
+  nationality: {
+    type: String,
+    trim: true,
+    default: 'Indian'
   },
   isDefault: {
     type: Boolean,

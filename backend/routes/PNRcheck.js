@@ -11,11 +11,11 @@ router.get('/api/PNRstatus',async(req,res)=>{
         error: 'Missing search query'
         });
     }
-    const url = `https://irctc-indian-railway-pnr-status.p.rapidapi.com/getPNRStatus/${pnrNumber}`;
+    const url = `https://irctc-indian-railway-pnr-status.p.rapidapi.com/getPNRStatus/${query}`;
     const options = {
         method: 'GET',
         headers: {
-            'x-rapidapi-key': '9a43e9d002mshed90898683d9dd3p143a5fjsn7e1d2c2f1ab7',
+            'x-rapidapi-key': 'd15f05b26amshc2c90427a2f6385p119c29jsn71e9babc3196',
             'x-rapidapi-host': 'irctc-indian-railway-pnr-status.p.rapidapi.com'
         }
     };
@@ -27,6 +27,7 @@ router.get('/api/PNRstatus',async(req,res)=>{
         res.json(result);
     } catch (error) {
         console.error(error);
+        res.status(500).json({ error: 'Failed to fetch PNR status' });
     }
 })
 

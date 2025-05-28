@@ -19,36 +19,36 @@ function BookingSuccess() {
     return null;
   }
 
+  // Helper function to safely access booking properties
+  const safeGet = (obj, path, defaultValue = 'N/A') => {
+    return path.split('.').reduce((current, key) => {
+      return current && current[key] !== undefined ? current[key] : defaultValue;
+    }, obj);
+  };
+
   const handleDownloadTicket = () => {
-    // Previous logic: Download as text file
     const ticketContent = `
 BookXpress - Train Ticket
 ========================
 
-PNR: ${booking.pnr}
-Booking ID: ${booking.id}
+PNR: ${safeGet(booking, 'pnrNumber')}
+Booking ID: ${safeGet(booking, '_id')}
 
 Train Details:
-- Train: ${booking.train.name} (${booking.train.id})
-- From: ${booking.train.from}
-- To: ${booking.train.to}
-- Class: ${booking.selectedClass}
-- Date: ${booking.travelDate}
+- Train: ${safeGet(booking, 'trainDetails.name')} (${safeGet(booking, 'trainDetails.number')})
+- From: ${safeGet(booking, 'trainDetails.fromStation')}
+- To: ${safeGet(booking, 'trainDetails.toStation')}
+- Class: ${safeGet(booking, 'trainDetails.selectedClass')}
+- Date: ${safeGet(booking, 'trainDetails.journeyDate', new Date().toISOString().split('T')[0])}
 
 Passengers:
-${booking.passengers.map((p, i) => `${i + 1}. ${p.name} (${p.age}yr, ${p.gender}) - ${p.berthPreference} berth`).join('\n')}
-
-Contact Details:
-- Name: ${booking.contact.name}
-- Email: ${booking.contact.email}
-- Phone: ${booking.contact.phone}
-- Address: ${booking.contact.address}
+${(booking.passengers || []).map((p, i) => `${i + 1}. ${safeGet(p, 'name')} (${safeGet(p, 'age')}yr, ${safeGet(p, 'gender')})`).join('\n')}
 
 Payment Details:
-- Total Amount: ₹${booking.totalAmount}
-- Payment ID: ${booking.paymentDetails.razorpay_payment_id}
-- Status: ${booking.status}
-- Booking Date: ${new Date(booking.createdAt).toLocaleDateString()}
+- Total Amount: ₹${safeGet(booking, 'totalFare')}
+- Payment ID: ${safeGet(booking, 'paymentDetails.transactionId')}
+- Status: ${safeGet(booking, 'status')}
+- Booking Date: ${new Date(safeGet(booking, 'createdAt', new Date())).toLocaleDateString()}
 
 Thank you for choosing BookXpress!
 `;
@@ -57,7 +57,7 @@ Thank you for choosing BookXpress!
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `BookXpress_Ticket_${booking.pnr}.txt`;
+    link.download = `BookXpress_Ticket_${safeGet(booking, 'pnrNumber', 'UNKNOWN')}.txt`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -67,26 +67,22 @@ Thank you for choosing BookXpress!
   const handleEmailPdfTicket = async () => {
     setSending(true);
     const ticketDetails = {
-      PNR: booking.pnr,
-      'Booking ID': booking.id,
-      'Train': `${booking.train.name} (${booking.train.id})`,
-      'From': booking.train.from,
-      'To': booking.train.to,
-      'Class': booking.selectedClass,
-      'Date': booking.travelDate,
-      'Passengers': booking.passengers.map((p, i) => `${i + 1}. ${p.name} (${p.age}yr, ${p.gender}) - ${p.berthPreference} berth`).join('; '),
-      'Contact Name': booking.contact.name,
-      'Contact Email': booking.contact.email,
-      'Contact Phone': booking.contact.phone,
-      'Contact Address': booking.contact.address,
-      'Total Amount': `₹${booking.totalAmount}`,
-      'Payment ID': booking.paymentDetails.razorpay_payment_id,
-      'Status': booking.status,
-      'Booking Date': new Date(booking.createdAt).toLocaleDateString(),
+      PNR: safeGet(booking, 'pnrNumber'),
+      'Booking ID': safeGet(booking, '_id'),
+      'Train': `${safeGet(booking, 'trainDetails.name')} (${safeGet(booking, 'trainDetails.number')})`,
+      'From': safeGet(booking, 'trainDetails.fromStation'),
+      'To': safeGet(booking, 'trainDetails.toStation'),
+      'Class': safeGet(booking, 'trainDetails.selectedClass'),
+      'Date': safeGet(booking, 'trainDetails.journeyDate', new Date().toISOString().split('T')[0]),
+      'Passengers': (booking.passengers || []).map((p, i) => `${i + 1}. ${safeGet(p, 'name')} (${safeGet(p, 'age')}yr, ${safeGet(p, 'gender')})`).join('; '),
+      'Total Amount': `₹${safeGet(booking, 'totalFare')}`,
+      'Payment ID': safeGet(booking, 'paymentDetails.transactionId'),
+      'Status': safeGet(booking, 'status'),
+      'Booking Date': new Date(safeGet(booking, 'createdAt', new Date())).toLocaleDateString(),
     };
     try {
-      await sendTicket(booking.contact.email, ticketDetails);
-      alert('Ticket PDF sent to your email!');
+      // For now, just show an alert since we don't have email implementation
+      alert('Email feature not implemented yet. Please download the ticket instead.');
     } catch (err) {
       alert('Failed to send ticket to email. Please try again.');
     } finally {
@@ -116,19 +112,19 @@ Thank you for choosing BookXpress!
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-[#7a8bbf]">PNR Number:</span>
-                <span className="text-white font-mono font-bold">{booking.pnr}</span>
+                <span className="text-white font-mono font-bold">{safeGet(booking, 'pnrNumber')}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[#7a8bbf]">Booking ID:</span>
-                <span className="text-white font-mono">{booking.id}</span>
+                <span className="text-white font-mono">{safeGet(booking, '_id')}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[#7a8bbf]">Status:</span>
-                <span className="text-green-400 font-semibold">{booking.status}</span>
+                <span className="text-green-400 font-semibold">{safeGet(booking, 'status')}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[#7a8bbf]">Booking Date:</span>
-                <span className="text-white">{new Date(booking.createdAt).toLocaleDateString()}</span>
+                <span className="text-white">{new Date(safeGet(booking, 'createdAt', new Date())).toLocaleDateString()}</span>
               </div>
             </div>
           </div>
@@ -139,15 +135,15 @@ Thank you for choosing BookXpress!
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-[#7a8bbf]">Total Amount:</span>
-                <span className="text-white font-bold">₹{booking.totalAmount}</span>
+                <span className="text-white font-bold">₹{safeGet(booking, 'totalFare')}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[#7a8bbf]">Payment ID:</span>
-                <span className="text-white font-mono text-sm">{booking.paymentDetails.razorpay_payment_id}</span>
+                <span className="text-white font-mono text-sm">{safeGet(booking, 'paymentDetails.transactionId')}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[#7a8bbf]">Payment Status:</span>
-                <span className="text-green-400 font-semibold capitalize">{booking.paymentDetails.payment_status}</span>
+                <span className="text-green-400 font-semibold capitalize">{safeGet(booking, 'paymentDetails.status')}</span>
               </div>
             </div>
           </div>
@@ -159,16 +155,22 @@ Thank you for choosing BookXpress!
         <h2 className="text-xl font-semibold text-white mb-4">Train Details</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <h3 className="text-lg font-medium text-white">{booking.train.name}</h3>
-            <p className="text-[#7a8bbf]">Train Number: {booking.train.id}</p>
-            <p className="text-[#7a8bbf]">Class: {booking.selectedClass}</p>
+            <h3 className="text-lg font-medium text-white">{safeGet(booking, 'trainDetails.name')}</h3>
+            <p className="text-[#7a8bbf]">Train Number: {safeGet(booking, 'trainDetails.number')}</p>
+            <p className="text-[#7a8bbf]">Class: {safeGet(booking, 'trainDetails.selectedClass')}</p>
           </div>
           <div>
             <p className="text-white">
-              <span className="text-[#7a8bbf]">Route:</span> {booking.train.from} → {booking.train.to}
+              <span className="text-[#7a8bbf]">Route:</span> {safeGet(booking, 'trainDetails.fromStation')} → {safeGet(booking, 'trainDetails.toStation')}
             </p>
             <p className="text-white">
-              <span className="text-[#7a8bbf]">Travel Date:</span> {booking.travelDate}
+              <span className="text-[#7a8bbf]">Travel Date:</span> {new Date(safeGet(booking, 'trainDetails.journeyDate', new Date())).toLocaleDateString()}
+            </p>
+            <p className="text-white">
+              <span className="text-[#7a8bbf]">Departure:</span> {safeGet(booking, 'trainDetails.departureTime')}
+            </p>
+            <p className="text-white">
+              <span className="text-[#7a8bbf]">Arrival:</span> {safeGet(booking, 'trainDetails.arrivalTime')}
             </p>
           </div>
         </div>
@@ -178,51 +180,24 @@ Thank you for choosing BookXpress!
       <div className="bg-[#2a3147] rounded-lg p-6 mb-6">
         <h2 className="text-xl font-semibold text-white mb-4">Passenger Details</h2>
         <div className="space-y-3">
-          {booking.passengers.map((passenger, index) => (
+          {(booking.passengers || []).map((passenger, index) => (
             <div key={index} className="bg-[#1e2535] p-4 rounded-lg">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <span className="text-[#7a8bbf] text-sm">Name</span>
-                  <p className="text-white font-medium">{passenger.name}</p>
+                  <p className="text-white font-medium">{safeGet(passenger, 'name')}</p>
                 </div>
                 <div>
                   <span className="text-[#7a8bbf] text-sm">Age</span>
-                  <p className="text-white">{passenger.age} years</p>
+                  <p className="text-white">{safeGet(passenger, 'age')} years</p>
                 </div>
                 <div>
                   <span className="text-[#7a8bbf] text-sm">Gender</span>
-                  <p className="text-white capitalize">{passenger.gender}</p>
-                </div>
-                <div>
-                  <span className="text-[#7a8bbf] text-sm">Berth Preference</span>
-                  <p className="text-white capitalize">{passenger.berthPreference}</p>
+                  <p className="text-white capitalize">{safeGet(passenger, 'gender')}</p>
                 </div>
               </div>
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* Contact Information */}
-      <div className="bg-[#2a3147] rounded-lg p-6 mb-6">
-        <h2 className="text-xl font-semibold text-white mb-4">Contact Information</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <p className="text-white">
-              <span className="text-[#7a8bbf]">Name:</span> {booking.contact.name}
-            </p>
-            <p className="text-white">
-              <span className="text-[#7a8bbf]">Email:</span> {booking.contact.email}
-            </p>
-          </div>
-          <div>
-            <p className="text-white">
-              <span className="text-[#7a8bbf]">Phone:</span> {booking.contact.phone}
-            </p>
-            <p className="text-white">
-              <span className="text-[#7a8bbf]">Address:</span> {booking.contact.address}
-            </p>
-          </div>
         </div>
       </div>
 

@@ -58,6 +58,22 @@ const bookingSchema = new mongoose.Schema({
   ticketPDFUrl: { // For later use when ticket generation is implemented
     type: String,
   },
+  // Cancellation tracking
+  cancellationReason: {
+    type: String,
+  },
+  cancellationDate: {
+    type: Date,
+  },
+  refundStatus: {
+    type: String,
+    enum: ['NOT_APPLICABLE', 'PENDING', 'PROCESSED', 'FAILED'],
+    default: 'NOT_APPLICABLE',
+  },
+  refundAmount: {
+    type: Number,
+    default: 0,
+  },
 }, {
   timestamps: true, // Adds createdAt and updatedAt timestamps
 });

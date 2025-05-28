@@ -61,7 +61,7 @@ app.use('/api/trains-between-stations', trainsBetweenStationsRoute);
 app.use('/api/stations', stationsRoute);
 
 // Protected routes (authentication required)
-app.use('/api/bookings', auth, bookingsRoute);
+// Note: bookings route has its own auth middleware, so it's not duplicated here
 app.use('/api/tickets', auth, ticketRoutes);
 app.use('/api/recent-searches', auth, recentSearchesRoute);
 

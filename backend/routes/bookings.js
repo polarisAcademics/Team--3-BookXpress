@@ -43,7 +43,8 @@ router.post('/store', async (req, res) => {
 // Get all bookings
 router.get('/', async (req, res) => {
   try {
-    res.json({ bookings });
+    const userBookings = bookings.filter(booking => booking.userId === req.user.userId);
+    res.json({ bookings: userBookings });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch bookings' });
   }
@@ -142,6 +143,12 @@ router.post('/:id/cancel', async (req, res) => {
     if (!booking) {
       return res.status(404).json({ error: 'Booking not found' });
     }
+    
+    // Check if the booking belongs to the authenticated user
+    if (booking.userId !== req.user.userId) {
+      return res.status(403).json({ error: 'Not authorized to cancel this booking' });
+    }
+    
     booking.status = 'Cancelled';
     res.json(booking);
   } catch (err) {

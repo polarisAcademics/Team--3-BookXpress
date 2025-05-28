@@ -3,6 +3,7 @@ import { cities } from '../data/cities';
 import { trains, additionalTrains } from '../data/trains';
 import TrainList from './TrainList';
 import { useNavigate } from 'react-router-dom';
+import { trainsService } from '../services/trains.service';
 
 // const API_BASE_URL = 'http://localhost:3000'; // API call moved to Hero.jsx
 
@@ -25,6 +26,8 @@ function Hero({ appliedDiscount, onSearch }) {
 
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   // Close suggestions when clicking outside
@@ -42,33 +45,42 @@ function Hero({ appliedDiscount, onSearch }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  // Function to fetch station suggestions
+  const fetchStationSuggestions = async (query, setSuggestions) => {
+    if (!query) {
+      setSuggestions([]);
+      return;
+    }
+    try {
+      const response = await fetch(`http://localhost:3000/api/stations/autocomplete?query=${encodeURIComponent(query)}`);
+      const data = await response.json();
+      setSuggestions(data);
+    } catch (error) {
+      console.error('Error fetching station suggestions:', error);
+      setSuggestions([]);
+    }
+  };
 
-    // Update suggestions based on input (still using cities data here if needed for Hero form)
+  // Handle input changes with debounced suggestions
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Fetch suggestions for the changed field
     if (name === 'from') {
-      const filtered = cities.filter(city => 
-        city.name.toLowerCase().includes(value.toLowerCase())
-      );
-      setFromSuggestions(filtered);
+      fetchStationSuggestions(value, setFromSuggestions);
       setShowFromSuggestions(true);
     } else if (name === 'to') {
-      const filtered = cities.filter(city => 
-        city.name.toLowerCase().includes(value.toLowerCase())
-      );
-      setToSuggestions(filtered);
+      fetchStationSuggestions(value, setToSuggestions);
       setShowToSuggestions(true);
     }
   };
 
-  const handleSuggestionClick = (city, field) => {
+  // Handle suggestion selection
+  const handleSuggestionSelect = (suggestion, field) => {
     setFormData(prev => ({
       ...prev,
-      [field]: city.name
+      [field]: suggestion.station
     }));
     if (field === 'from') {
       setShowFromSuggestions(false);
@@ -84,66 +96,89 @@ function Hero({ appliedDiscount, onSearch }) {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Hero form submitted.', formData);
+    setLoading(true);
+    setError(null);
 
-    const allTrains = [...trains, ...additionalTrains];
-    const results = allTrains.filter(train => 
-      train.from.toLowerCase() === formData.from.toLowerCase() &&
-      train.to.toLowerCase() === formData.to.toLowerCase()
-    );
+    try {
+      const response = await trainsService.getTrainsBetweenStations(
+        formData.from,
+        formData.to,
+        formData.date
+      );
 
-    // Apply discount to search results
-    const discountedResults = results.map(train => {
-      let discountedFare = { ...train.fare };
-      if (appliedDiscount) {
-        // Only apply senior citizen discount if senior citizen quota is selected
-        if (appliedDiscount.code === 'SENIOR10') {
-          if (formData.quota !== 'senior') {
-            console.log('Senior citizen discount not applied - quota not senior');
-            return { ...train, fare: train.fare }; // Return original fare without discount
-          }
-          console.log('Senior citizen discount applied - quota is senior');
-        }
-        
-        discountedFare = Object.keys(train.fare).reduce((acc, className) => {
-          let baseFare = train.fare[className];
-          if (appliedDiscount.type === 'percent') {
-            baseFare = baseFare * (1 - appliedDiscount.value / 100);
-          } else if (appliedDiscount.type === 'flat') {
-            baseFare = Math.max(0, baseFare - appliedDiscount.value);
-          }
-          acc[className] = Math.round(baseFare);
-          return acc;
-        }, {});
+      if (!response.status) {
+        throw new Error(response.message || 'Failed to fetch trains');
       }
-      return { ...train, fare: discountedFare };
-    });
 
-    setSearchResults(discountedResults);
-    setShowResults(true);
-    console.log('Hero search results after filtering and applying discount:', discountedResults);
+      const transformedTrains = response.trains.map(train => ({
+        trainNumber: train.trainNumber,
+        trainName: train.trainName,
+        departure: train.fromStation.departure,
+        arrival: train.toStation.arrival,
+        duration: train.duration,
+        classes: train.availableClasses,
+        fare: {
+          "1A": 1500,
+          "2A": 800,
+          "3A": 500,
+          "SL": 250
+        }
+      }));
 
-    // Save search to backend and update recent searches
-    const token = localStorage.getItem('token');
-    if (token) {
-      fetch('http://localhost:3000/api/recent-searches', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          from: formData.from,
-          to: formData.to,
-          date: formData.date,
-        }),
-      }).then(() => {
-        if (onSearch) onSearch(formData);
+      const discountedResults = transformedTrains.map(train => {
+        let discountedFare = { ...train.fare };
+        if (appliedDiscount) {
+          if (appliedDiscount.code === 'SENIOR10' && formData.quota !== 'senior') {
+            console.log('Senior citizen discount not applied - quota not senior');
+            return { ...train, fare: train.fare };
+          }
+          
+          discountedFare = Object.keys(train.fare).reduce((acc, className) => {
+            let baseFare = train.fare[className];
+            if (appliedDiscount.type === 'percent') {
+              baseFare = baseFare * (1 - appliedDiscount.value / 100);
+            } else if (appliedDiscount.type === 'flat') {
+              baseFare = Math.max(0, baseFare - appliedDiscount.value);
+            }
+            acc[className] = Math.round(baseFare);
+            return acc;
+          }, {});
+        }
+        return { ...train, fare: discountedFare };
       });
-    } else {
+
+      setSearchResults(discountedResults);
+      setShowResults(true);
+
+      // Save search to backend and update recent searches
+      try {
+        const token = localStorage.getItem('token');
+        await fetch('http://localhost:3000/api/recent-searches', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
+          body: JSON.stringify({
+            from: formData.from,
+            to: formData.to,
+            date: formData.date,
+          }),
+        });
+      } catch (err) {
+        console.warn('Failed to save recent search:', err);
+        // Continue execution even if saving recent search fails
+      }
+      
       if (onSearch) onSearch(formData);
+    } catch (err) {
+      console.error('Search error:', err);
+      setError(err.message || 'Failed to search trains');
+      setSearchResults([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -174,7 +209,7 @@ function Hero({ appliedDiscount, onSearch }) {
                   type="text"
                   name="from"
                   value={formData.from}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   onFocus={() => setShowFromSuggestions(true)}
                   placeholder="Enter city or station"
                   className="w-full bg-theme-primary text-theme-primary rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
@@ -182,13 +217,14 @@ function Hero({ appliedDiscount, onSearch }) {
                 />
                 {showFromSuggestions && fromSuggestions.length > 0 && (
                   <div className="absolute z-10 w-full bg-theme-primary rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
-                    {fromSuggestions.map((city) => (
+                    {fromSuggestions.map((suggestion, index) => (
                       <div
-                        key={city.code}
+                        key={index}
                         className="px-4 py-2 text-sm text-theme-primary hover:bg-[var(--accent-color)] hover:text-white cursor-pointer"
-                        onClick={() => handleSuggestionClick(city, 'from')}
+                        onClick={() => handleSuggestionSelect(suggestion, 'from')}
                       >
-                        {city.name} ({city.code})
+                        <div className="font-medium">{suggestion.station}</div>
+                        <div className="text-sm text-gray-500">{suggestion.city} ({suggestion.code})</div>
                       </div>
                     ))}
                   </div>
@@ -201,7 +237,7 @@ function Hero({ appliedDiscount, onSearch }) {
                   type="text"
                   name="to"
                   value={formData.to}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   onFocus={() => setShowToSuggestions(true)}
                   placeholder="Enter city or station"
                   className="w-full bg-theme-primary text-theme-primary rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
@@ -209,13 +245,14 @@ function Hero({ appliedDiscount, onSearch }) {
                 />
                 {showToSuggestions && toSuggestions.length > 0 && (
                   <div className="absolute z-10 w-full bg-theme-primary rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto">
-                    {toSuggestions.map((city) => (
+                    {toSuggestions.map((suggestion, index) => (
                       <div
-                        key={city.code}
+                        key={index}
                         className="px-4 py-2 text-sm text-theme-primary hover:bg-[var(--accent-color)] hover:text-white cursor-pointer"
-                        onClick={() => handleSuggestionClick(city, 'to')}
+                        onClick={() => handleSuggestionSelect(suggestion, 'to')}
                       >
-                        {city.name} ({city.code})
+                        <div className="font-medium">{suggestion.station}</div>
+                        <div className="text-sm text-gray-500">{suggestion.city} ({suggestion.code})</div>
                       </div>
                     ))}
                   </div>
@@ -230,7 +267,7 @@ function Hero({ appliedDiscount, onSearch }) {
                   type="date"
                   name="date"
                   value={formData.date}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   className="w-full bg-theme-primary text-theme-primary rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
                   required
                 />
@@ -240,7 +277,7 @@ function Hero({ appliedDiscount, onSearch }) {
                 <select
                   name="classType"
                   value={formData.classType}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   className="w-full bg-theme-primary text-theme-primary rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
                   required
                 >
@@ -256,7 +293,7 @@ function Hero({ appliedDiscount, onSearch }) {
                 <select
                   name="quota"
                   value={formData.quota}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   className="w-full bg-theme-primary text-theme-primary rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
                 >
                   <option value="general">General</option>
@@ -272,8 +309,9 @@ function Hero({ appliedDiscount, onSearch }) {
               <button
                 type="submit"
                 className="w-full bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] text-white py-3 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading}
               >
-                Search Trains
+                {loading ? 'Searching...' : 'Search Trains'}
               </button>
             </div>
           </form>
@@ -284,18 +322,26 @@ function Hero({ appliedDiscount, onSearch }) {
       {showResults && (
         <div className="max-w-5xl mx-auto mt-8">
           <h3 className="text-white text-xl font-semibold mb-4">Search Results</h3>
-           <TrainList 
-             trains={searchResults}
-             selectedClass={formData.classType || '3A'}
-             appliedDiscount={appliedDiscount}
-             quota={formData.quota}
-             onBookNow={handleBookNow}
-           />
-         {searchResults.length === 0 && (
-            <div className="mt-4 bg-yellow-500/10 border border-yellow-500 text-yellow-500 px-4 py-3 rounded-lg">
-                <p>No trains found for the selected route.</p>
+          {error ? (
+            <div className="mt-4 bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded-lg">
+              <p>{error}</p>
             </div>
-         )}
+          ) : (
+            <>
+              <TrainList 
+                trains={searchResults}
+                selectedClass={formData.classType || '3A'}
+                appliedDiscount={appliedDiscount}
+                quota={formData.quota}
+                onBookNow={handleBookNow}
+              />
+              {searchResults.length === 0 && (
+                <div className="mt-4 bg-yellow-500/10 border border-yellow-500 text-yellow-500 px-4 py-3 rounded-lg">
+                  <p>No trains found for the selected route.</p>
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
     </section>

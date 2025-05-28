@@ -2,8 +2,16 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/user.model.js';
 import { authenticateLogin, authenticateToken } from '../middleware/auth.js';
+import multer from 'multer';
 
 const router = express.Router();
+
+// JWT Secret from environment variable
+const JWT_SECRET = process.env.JWT_SECRET || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiZGFyc2hpdCIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0ODMyOTQxNn0.YP1jIFH38LEkEdXailiPB_EZzKpcixQcLqxODG0Bb7c';
+
+// Set up multer for file uploads
+// TODO: Configure storage location and filename
+const upload = multer({ dest: 'uploads/' }); // Temporary destination
 
 // Signup route
 router.post('/signup', async (req, res) => {
@@ -51,14 +59,14 @@ router.post('/signup', async (req, res) => {
     // Generate JWT token
     const token = jwt.sign(
       { userId: user._id },
-      process.env.JWT_SECRET || '2c7c38fa6176b7db559c2f9e86f9b53d33125685022574386639ad43468b019dd061be65ba76e377253f2c44fcf640153686cd896f11bc30b3fe3eab3f39e3b2',
+      JWT_SECRET,
       { expiresIn: '24h' }
     );
 
     // Generate refresh token
     const refreshToken = jwt.sign(
       { userId: user._id },
-      process.env.REFRESH_TOKEN_SECRET || '2c7c38fa6176b7db559c2f9e86f9b53d33125685022574386639ad43468b019dd061be65ba76e377253f2c44fcf640153686cd896f11bc30b3fe3eab3f39e3b2',
+      JWT_SECRET,
       { expiresIn: '7d' }
     );
 
@@ -96,7 +104,7 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-// Login route with special auth middleware
+// Login route
 router.post('/login', authenticateLogin, async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -116,14 +124,14 @@ router.post('/login', authenticateLogin, async (req, res) => {
     // Generate JWT token
     const token = jwt.sign(
       { userId: user._id },
-      process.env.JWT_SECRET || '2c7c38fa6176b7db559c2f9e86f9b53d33125685022574386639ad43468b019dd061be65ba76e377253f2c44fcf640153686cd896f11bc30b3fe3eab3f39e3b2',
+      JWT_SECRET,
       { expiresIn: '24h' }
     );
 
     // Generate refresh token
     const refreshToken = jwt.sign(
       { userId: user._id },
-      process.env.REFRESH_TOKEN_SECRET || '2c7c38fa6176b7db559c2f9e86f9b53d33125685022574386639ad43468b019dd061be65ba76e377253f2c44fcf640153686cd896f11bc30b3fe3eab3f39e3b2',
+      JWT_SECRET,
       { expiresIn: '7d' }
     );
 
@@ -152,15 +160,12 @@ router.post('/refresh-token', async (req, res) => {
     }
 
     // Verify refresh token
-    const decoded = jwt.verify(
-      refreshToken,
-      process.env.REFRESH_TOKEN_SECRET || '2c7c38fa6176b7db559c2f9e86f9b53d33125685022574386639ad43468b019dd061be65ba76e377253f2c44fcf640153686cd896f11bc30b3fe3eab3f39e3b2'
-    );
+    const decoded = jwt.verify(refreshToken, JWT_SECRET);
 
     // Generate new access token
     const token = jwt.sign(
       { userId: decoded.userId },
-      process.env.JWT_SECRET || '2c7c38fa6176b7db559c2f9e86f9b53d33125685022574386639ad43468b019dd061be65ba76e377253f2c44fcf640153686cd896f11bc30b3fe3eab3f39e3b2',
+      JWT_SECRET,
       { expiresIn: '24h' }
     );
 
@@ -210,4 +215,62 @@ router.post('/change-password', authenticateToken, async (req, res) => {
   }
 });
 
+// Update profile endpoint
+router.post('/update-profile', authenticateToken, upload.single('profilePicture'), async (req, res) => {
+  const { name, phone } = req.body; // Access text fields
+  const profilePictureFile = req.file; // Access the uploaded file
+
+  const userId = req.user._id;
+  console.log(`Profile update request received for user ID: ${userId}`);
+  console.log('Received data:', { name, phone });
+  console.log('Received file:', profilePictureFile);
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      console.log('User not found for ID:', userId);
+      return res.status(404).json({ error: 'User not found' });
+    }
+    console.log('User found:', user.email);
+
+    // Update fields if provided
+    if (name !== undefined) {
+      user.name = name;
+      console.log('Updating name to:', name);
+    }
+    if (phone !== undefined) {
+      user.phone = phone;
+      console.log('Updating phone to:', phone);
+    }
+
+    // Handle profile picture update
+    if (profilePictureFile) {
+      // TODO: Implement actual file storage (e.g., to a cloud storage or a permanent directory)
+      // For now, just save the temporary path or a placeholder
+      user.profilePicture = `/uploads/${profilePictureFile.filename}`; // Return the URL for static access
+      console.log('Updating profile picture path to:', profilePictureFile.path);
+    }
+
+    await user.save();
+    console.log('Profile saved successfully');
+
+    // Return updated user info (excluding sensitive data like password)
+    res.json({
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone, // Include phone in the response
+        profilePicture: user.profilePicture, // Include profile picture URL
+      },
+    });
+  } catch (err) {
+    console.error('Error updating profile:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Export both the router and the auth middleware
+export { authenticateToken as auth };
 export default router; 

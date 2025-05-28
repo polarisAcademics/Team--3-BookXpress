@@ -9,21 +9,8 @@ function Navbar() {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-  const [profileImage, setProfileImage] = useState(null);
-  const fileInputRef = useRef(null);
 
   const isActive = (path) => location.pathname === path;
-
-  const handleProfileImageChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfileImage(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
   const navItems = [
     { path: '/', label: 'Home' },
@@ -81,9 +68,9 @@ function Navbar() {
                   onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
                   className="flex items-center space-x-2 text-gray-300 hover:text-white focus:outline-none"
                 >
-                  {profileImage ? (
+                  {user?.profilePicture ? (
                     <img
-                      src={profileImage}
+                      src={user.profilePicture}
                       alt="Profile"
                       className="w-8 h-8 rounded-full object-cover"
                     />
@@ -92,27 +79,13 @@ function Navbar() {
                       <i className="fas fa-user text-white"></i>
                     </div>
                   )}
-                  <span>{user.name}</span>
+                  <span className={`${isDarkMode ? 'text-gray-300' : 'text-black'}`}>{user.name}</span>
                   <i className={`fas fa-chevron-${isProfileMenuOpen ? 'up' : 'down'} text-sm`}></i>
                 </button>
 
                 {isProfileMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-[#1e2535] ring-1 ring-black ring-opacity-5 z-50">
+                  <div className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg ${isDarkMode ? 'bg-black' : 'bg-white'} ring-1 ring-black ring-opacity-5 z-50`}>
                     <div className="py-1">
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className={`block w-full text-left px-4 py-2 text-sm ${isDarkMode ? 'text-gray-300 hover:bg-[#2a3147] hover:text-white' : 'text-gray-700 hover:bg-gray-200 hover:text-black'}`}
-                      >
-                        <i className="fas fa-camera mr-2"></i>
-                        Change Profile Picture
-                      </button>
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleProfileImageChange}
-                        accept="image/*"
-                        className="hidden"
-                      />
                       <Link
                         to="/settings"
                         className={`block px-4 py-2 text-sm ${isDarkMode ? 'text-gray-300 hover:bg-[#2a3147] hover:text-white' : 'text-gray-700 hover:bg-gray-200 hover:text-black'}`}
@@ -193,9 +166,9 @@ function Navbar() {
           {user ? (
             <div className="px-4 py-2">
               <div className="flex items-center space-x-2 mb-2">
-                {profileImage ? (
+                {user?.profilePicture ? (
                   <img
-                    src={profileImage}
+                    src={user.profilePicture}
                     alt="Profile"
                     className="w-8 h-8 rounded-full object-cover"
                   />
@@ -204,15 +177,8 @@ function Navbar() {
                     <i className="fas fa-user text-white"></i>
                   </div>
                 )}
-                <span className="text-gray-300">{user.name}</span>
+                <span className={`${isDarkMode ? 'text-gray-300' : 'text-black'}`}>{user.name}</span>
               </div>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className={`w-full text-left px-4 py-2 text-sm ${isDarkMode ? 'text-gray-300 hover:bg-[#2a3147] hover:text-white' : 'text-gray-700 hover:bg-gray-200 hover:text-black'}`}
-              >
-                <i className="fas fa-camera mr-2"></i>
-                Change Profile Picture
-              </button>
               <Link
                 to="/settings"
                 className={`block w-full text-left px-4 py-2 text-sm ${isDarkMode ? 'text-gray-300 hover:bg-[#2a3147] hover:text-white' : 'text-gray-700 hover:bg-gray-200 hover:text-black'}`}

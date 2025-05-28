@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import authRoutes from './routes/auth.routes.js';
+import authRoutes, { auth } from './routes/auth.routes.js';
 import trainStatusRoute from './routes/trainStatus.js';
 import bookingsRoute from './routes/bookings.js';
 import trainsRoute from './routes/trains.js';
@@ -11,19 +11,29 @@ import pnrStatusRoute from './routes/pnrStatus.js';
 import recentSearchesRoute from './routes/recentSearches.js';
 import travelersRoute from './routes/travelers.js';
 import paymentRoutes from './routes/payment.js';
-import bookingRoutes from './routes/bookings.js';
+import trainsBetweenStationsRoute from './routes/trainsBetweenStations.js';
+import stationsRoute from './routes/stations.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
 const app = express();
 
-// Configure CORS with specific options
+// CORS configuration
 app.use(cors({
-  origin: 'http://localhost:5173', // Your frontend URL
+  origin: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL : ['http://localhost:5173', 'http://localhost:5174'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
+
+// Serve static files from the 'uploads' directory
+// Make sure the 'uploads' directory exists
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // JSON parsing with error handling
 app.use(express.json({
@@ -37,16 +47,23 @@ app.use(express.json({
   }
 }));
 
-// Routes
+// Public routes (no authentication required)
 app.use('/api/auth', authRoutes);
 app.use('/api/trains', trainsRoute);
 app.use('/api/train-status', trainStatusRoute);
 app.use('/api/pnr-status', pnrStatusRoute);
 app.use('/api/recent-searches', recentSearchesRoute);
-app.use('/api/bookings', bookingRoutes);
+app.use('/api/bookings', bookingsRoute);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/travelers', travelersRoute);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/trains-between-stations', trainsBetweenStationsRoute);
+app.use('/api/stations', stationsRoute);
+
+// Protected routes (authentication required)
+app.use('/api/bookings', auth, bookingsRoute);
+app.use('/api/tickets', auth, ticketRoutes);
+app.use('/api/recent-searches', auth, recentSearchesRoute);
 
 // Add a test route to verify the server is running
 app.get('/api/health', (req, res) => {

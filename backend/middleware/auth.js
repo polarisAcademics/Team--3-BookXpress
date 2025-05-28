@@ -1,5 +1,8 @@
 import jwt from 'jsonwebtoken';
 
+// Define a consistent JWT secret
+const JWT_SECRET = '2c7c38fa6176b7db559c2f9e86f9b53d33125685022574386639ad43468b019dd061be65ba76e377253f2c44fcf640153686cd896f11bc30b3fe3eab3f39e3b2';
+
 // Special middleware for login route that allows requests without token
 export const authenticateLogin = (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -34,10 +37,7 @@ export const authenticateLogin = (req, res, next) => {
     }
 
     // Now verify the token
-    const secret = process.env.JWT_SECRET || '2c7c38fa6176b7db559c2f9e86f9b53d33125685022574386639ad43468b019dd061be65ba76e377253f2c44fcf640153686cd896f11bc30b3fe3eab3f39e3b2';
-    console.log('Using JWT_SECRET starting with:', secret.substring(0, 10) + '...');
-
-    const verified = jwt.verify(token, secret);
+    const verified = jwt.verify(token, JWT_SECRET);
     console.log('Token verification successful. User:', verified);
     
     // Add user information to the request
@@ -92,10 +92,7 @@ export const authenticateToken = (req, res, next) => {
     }
 
     // Now verify the token
-    const secret = process.env.JWT_SECRET || '2c7c38fa6176b7db559c2f9e86f9b53d33125685022574386639ad43468b019dd061be65ba76e377253f2c44fcf640153686cd896f11bc30b3fe3eab3f39e3b2';
-    console.log('Using JWT_SECRET starting with:', secret.substring(0, 10) + '...');
-
-    const verified = jwt.verify(token, secret);
+    const verified = jwt.verify(token, JWT_SECRET);
     console.log('Token verification successful. User:', verified);
     
     // Add user information to the request

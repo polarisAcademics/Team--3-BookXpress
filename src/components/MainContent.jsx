@@ -20,21 +20,18 @@ function MainContent() {
 
   // Function to fetch recent searches from backend
   const fetchRecentSearches = useCallback(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setRecentSearches([]);
-      return;
-    }
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch('http://localhost:3000/api/recent-searches', {
         headers: {
-          Authorization: `Bearer ${token}`,
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
       });
       if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
       setRecentSearches(data);
-    } catch {
+    } catch (err) {
+      console.warn('Failed to fetch recent searches:', err);
       setRecentSearches([]);
     }
   }, []);

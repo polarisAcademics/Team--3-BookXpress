@@ -1,10 +1,12 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { sendTicket } from '../services/ticket.service';
 
 function BookingSuccess() {
   const location = useLocation();
   const navigate = useNavigate();
   const { booking, message } = location.state || {};
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     // If no booking data, redirect to home
@@ -18,7 +20,7 @@ function BookingSuccess() {
   }
 
   const handleDownloadTicket = () => {
-    // Create a simple text-based ticket
+    // Previous logic: Download as text file
     const ticketContent = `
 BookXpress - Train Ticket
 ========================
@@ -60,6 +62,36 @@ Thank you for choosing BookXpress!
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
+  };
+
+  const handleEmailPdfTicket = async () => {
+    setSending(true);
+    const ticketDetails = {
+      PNR: booking.pnr,
+      'Booking ID': booking.id,
+      'Train': `${booking.train.name} (${booking.train.id})`,
+      'From': booking.train.from,
+      'To': booking.train.to,
+      'Class': booking.selectedClass,
+      'Date': booking.travelDate,
+      'Passengers': booking.passengers.map((p, i) => `${i + 1}. ${p.name} (${p.age}yr, ${p.gender}) - ${p.berthPreference} berth`).join('; '),
+      'Contact Name': booking.contact.name,
+      'Contact Email': booking.contact.email,
+      'Contact Phone': booking.contact.phone,
+      'Contact Address': booking.contact.address,
+      'Total Amount': `₹${booking.totalAmount}`,
+      'Payment ID': booking.paymentDetails.razorpay_payment_id,
+      'Status': booking.status,
+      'Booking Date': new Date(booking.createdAt).toLocaleDateString(),
+    };
+    try {
+      await sendTicket(booking.contact.email, ticketDetails);
+      alert('Ticket PDF sent to your email!');
+    } catch (err) {
+      alert('Failed to send ticket to email. Please try again.');
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -201,6 +233,13 @@ Thank you for choosing BookXpress!
           className="flex-1 bg-[#3b63f7] hover:bg-[#2f54e0] text-white py-3 px-6 rounded font-semibold transition-colors"
         >
           Download Ticket
+        </button>
+        <button
+          onClick={handleEmailPdfTicket}
+          className="flex-1 bg-[#3b63f7] hover:bg-[#2f54e0] text-white py-3 px-6 rounded font-semibold transition-colors"
+          disabled={sending}
+        >
+          {sending ? 'Sending...' : 'Email PDF Ticket'}
         </button>
         <button
           onClick={() => navigate('/my-bookings')}

@@ -17,8 +17,24 @@ export const AuthProvider = ({ children }) => {
     // Check if user is logged in
     const token = localStorage.getItem('token');
     if (token) {
-      // TODO: Validate token with backend
-      setUser(JSON.parse(localStorage.getItem('user')));
+      // Validate token with backend
+      fetch(`${authConfig.api.baseUrl}/api/auth/validate-token`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then(res => {
+          if (!res.ok) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+          } else {
+            setUser(JSON.parse(localStorage.getItem('user')));
+          }
+        })
+        .catch(() => {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+        });
     }
     setLoading(false);
   }, []);

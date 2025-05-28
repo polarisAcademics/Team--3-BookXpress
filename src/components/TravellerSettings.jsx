@@ -298,31 +298,20 @@ function TravellerSettings() {
                 <div className="overflow-x-auto">
                     <table className={`min-w-full divide-y ${isDarkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
                         <thead>
-                            <tr className={`${isDarkMode ? 'bg-[#2a3147] text-white' : 'bg-gray-100 text-gray-800'}`}>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">S. No.</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Name</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Age</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Gender</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">ID Proof Type</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Phone Number</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">ID Number</th> {/* Kept for now */}
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Seat Preference</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Nationality</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Actions</th>
-                            </tr>
+                            <tr className={`${isDarkMode ? 'bg-[#2a3147] text-white' : 'bg-gray-100 text-gray-800'}`}><th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">S. No.</th><th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Name</th><th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Age</th><th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Gender</th><th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">ID Proof Type</th><th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Phone Number</th><th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">ID Number</th><th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Seat Preference</th><th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Nationality</th><th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Actions</th></tr>
                         </thead>
                         <tbody className={`divide-y ${isDarkMode ? 'divide-gray-700 bg-[#1e2535]' : 'divide-gray-200 bg-white'}`}>
                             {travellers.map((traveller, index) => (
-                                <tr key={traveller._id}> {/* Use _id for key */}
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">{index + 1}</td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{traveller.name}</td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{traveller.age}</td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{traveller.gender}</td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{traveller.idProofType}</td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{traveller.phoneNumber}</td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{traveller.idNumber}</td> {/* Kept for now */}
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{traveller.seatPreference}</td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{traveller.nationality}</td>
+                                <tr key={traveller._id}>
+                                    <td className={`px-4 py-4 whitespace-nowrap text-sm font-medium ${isDarkMode ? 'text-gray-100' : 'text-gray-900'}`}>{index + 1}</td>
+                                    <td className={`px-4 py-4 whitespace-nowrap text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>{traveller.name}</td>
+                                    <td className={`px-4 py-4 whitespace-nowrap text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>{traveller.age}</td>
+                                    <td className={`px-4 py-4 whitespace-nowrap text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>{traveller.gender}</td>
+                                    <td className={`px-4 py-4 whitespace-nowrap text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>{traveller.idProofType}</td>
+                                    <td className={`px-4 py-4 whitespace-nowrap text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>{traveller.phoneNumber}</td>
+                                    <td className={`px-4 py-4 whitespace-nowrap text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>{traveller.idNumber}</td>
+                                    <td className={`px-4 py-4 whitespace-nowrap text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>{traveller.seatPreference}</td>
+                                    <td className={`px-4 py-4 whitespace-nowrap text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-800'}`}>{traveller.nationality}</td>
                                     <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <button
                                             onClick={() => handleEditTraveller(traveller._id)} // Use _id for editing

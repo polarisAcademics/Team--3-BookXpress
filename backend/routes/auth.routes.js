@@ -1,6 +1,7 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/user.model.js';
+import { authenticateLogin, authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -171,9 +172,9 @@ router.post('/refresh-token', async (req, res) => {
 });
 
 // Change password endpoint
-router.post('/change-password', auth, async (req, res) => {
+router.post('/change-password', authenticateToken, async (req, res) => {
   const { currentPassword, newPassword } = req.body;
-  console.log('Change password request received for user ID:', req.user.id);
+  console.log('Change password request received for user ID:', req.user.userId);
   console.log('Current password provided:', currentPassword ? '[provided]' : '[not provided]');
   console.log('New password provided:', newPassword ? '[provided]' : '[not provided]');
 
@@ -182,9 +183,9 @@ router.post('/change-password', auth, async (req, res) => {
     return res.status(400).json({ error: 'All fields are required' });
   }
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.userId);
     if (!user) {
-      console.log('User not found for ID:', req.user.id);
+      console.log('User not found for ID:', req.user.userId);
       return res.status(404).json({ error: 'User not found' });
     }
     console.log('User found:', user.email);

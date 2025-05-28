@@ -1,8 +1,8 @@
 import express from 'express';
 import fetch from 'node-fetch';
 
+const API_KEY = 'd15f05b26amshc2c90427a2f6385p119c29jsn71e9babc3196';
 const router = express.Router();
-const API_KEY = 'f95fae240691afb840ca591e8677e099';
 
 // Temporary train data (replace with actual database later)
 // const trains = [

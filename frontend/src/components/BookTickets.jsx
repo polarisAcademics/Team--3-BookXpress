@@ -29,6 +29,34 @@ function BookTickets() {
   const [selectedTravelerIndex, setSelectedTravelerIndex] = useState(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState(null);
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError] = useState('');
+
+  // Available coupons
+  const coupons = [
+    {
+      code: 'WEEKEND20',
+      title: 'Weekend Getaway',
+      description: '20% off on all weekend bookings',
+      type: 'percent',
+      value: 20
+    },
+    {
+      code: 'FIRST100',
+      title: 'First Journey',
+      description: 'Flat ₹100 off on your first booking',
+      type: 'flat',
+      value: 100
+    },
+    {
+      code: 'SENIOR10',
+      title: 'Senior Citizen',
+      description: 'Additional 10% off for senior citizens',
+      type: 'percent',
+      value: 10
+    }
+  ];
 
   // Fetch saved travelers when component mounts
   useEffect(() => {
@@ -178,19 +206,45 @@ function BookTickets() {
     setShowSaveTravelerModal(false);
   };
 
+  const handleApplyCoupon = () => {
+    setCouponError('');
+    const coupon = coupons.find(c => c.code === couponCode.toUpperCase());
+    
+    if (!couponCode) {
+      setCouponError('Please enter a coupon code');
+      return;
+    }
+
+    if (!coupon) {
+      setCouponError('Invalid coupon code');
+      return;
+    }
+
+    setAppliedCoupon(coupon);
+    setCouponCode('');
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+    setCouponError('');
+  };
+
   const calculateFare = () => {
     if (!selectedTrain || !selectedClass) return 0;
     const baseFarePerPassenger = selectedTrain.fare[selectedClass] || selectedTrain.fare['3A'];
     let totalBaseFare = baseFarePerPassenger * formData.passengers.length;
 
-    if (appliedDiscount && appliedDiscount.type === 'percent') {
-      totalBaseFare = totalBaseFare * (1 - appliedDiscount.value / 100);
-    } else if (appliedDiscount && appliedDiscount.type === 'flat') {
-      totalBaseFare = totalBaseFare - appliedDiscount.value;
-      if (totalBaseFare < 0) totalBaseFare = 0; // Ensure fare doesn't go below zero
+    // Apply coupon discount if any
+    if (appliedCoupon) {
+      if (appliedCoupon.type === 'percent') {
+        totalBaseFare = totalBaseFare * (1 - appliedCoupon.value / 100);
+      } else if (appliedCoupon.type === 'flat') {
+        totalBaseFare = totalBaseFare - appliedCoupon.value;
+      }
     }
 
-    return Math.round(totalBaseFare);
+    return Math.max(0, Math.round(totalBaseFare)); // Ensure fare doesn't go below 0
   };
 
   const handlePayment = async () => {
@@ -213,7 +267,7 @@ function BookTickets() {
         passengers: formData.passengers,
         contact: formData.contact,
         totalAmount: totalAmount,
-        appliedDiscount: appliedDiscount,
+        appliedDiscount: appliedCoupon,
         travelDate: selectedTrain.date || new Date().toISOString().split('T')[0],
       };
 
@@ -465,40 +519,85 @@ function BookTickets() {
         {/* Fare Summary */}
         <div className="bg-[#2a3147] p-4 rounded-lg">
           <h3 className="text-white text-lg font-semibold mb-4">Fare Summary</h3>
+          
+          {/* Coupon Section */}
+          <div className="mb-4 space-y-4">
+            <div className="flex flex-col space-y-4">
+              {!appliedCoupon && (
+                <>
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value)}
+                      placeholder="Enter coupon code"
+                      className="flex-1 bg-[#1e2535] text-white rounded px-3 py-2"
+                    />
+                    <button
+                      onClick={handleApplyCoupon}
+                      className="bg-[#3b63f7] hover:bg-[#2f54e0] text-white px-4 py-2 rounded"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                  {couponError && (
+                    <p className="text-red-500 text-sm">{couponError}</p>
+                  )}
+                </>
+              )}
+
+              {/* Available Offers */}
+              <div className="space-y-3">
+                <h4 className="text-white font-medium">Available Offers</h4>
+                {coupons.map((coupon) => (
+                  <div key={coupon.code} className="bg-[#1e2535] p-3 rounded-lg">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h5 className="text-white font-medium">{coupon.title}</h5>
+                        <p className="text-[#7a8bbf] text-sm">{coupon.description}</p>
+                      </div>
+                      <div className="text-[#3b63f7] font-medium">{coupon.code}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <div className="flex justify-between text-[#7a8bbf]">
               <span>Base Fare ({formData.passengers.length} passengers)</span>
-              {/* Display original base fare before discount */}
               <span>₹{Math.round((selectedTrain?.fare[selectedClass] || selectedTrain?.fare['3A']) * formData.passengers.length)}</span>
             </div>
-            {/* Display discount details if applied */}
-            {appliedDiscount && (
+            
+            {appliedCoupon && (
               <div className="flex justify-between text-green-400">
-                {appliedDiscount.type === 'percent' ? (
-                  <span>Applied Discount ({appliedDiscount.value}%)</span>
-                ) : (
-                  <span>Applied Discount (Flat ₹{appliedDiscount.value})</span>
-                )}
-                {/* Calculate and display the discount amount */}
+                <span className="flex items-center">
+                  Applied Coupon: {appliedCoupon.code}
+                  <button
+                    onClick={removeCoupon}
+                    className="ml-2 text-red-400 hover:text-red-300"
+                  >
+                    ✕
+                  </button>
+                </span>
                 <span>
                   - ₹{
-                    appliedDiscount.type === 'percent'
-                      ? Math.round(
-                          (selectedTrain?.fare[selectedClass] || selectedTrain?.fare['3A']) *
-                            formData.passengers.length *
-                            (appliedDiscount.value / 100)
-                        )
-                      : appliedDiscount.value
+                    appliedCoupon.type === 'percent'
+                      ? Math.round((selectedTrain?.fare[selectedClass] || selectedTrain?.fare['3A']) * formData.passengers.length * (appliedCoupon.value / 100))
+                      : appliedCoupon.value
                   }
                 </span>
               </div>
             )}
+
             <div className="flex justify-between text-[#7a8bbf]">
               <span>Service Charges</span>
-              {/* Service charge on discounted fare */}
               <span>₹{Math.round(calculateFare() * 0.05)}</span>
             </div>
+            
             <div className="border-t border-[#3b63f7] my-2"></div>
+            
             <div className="flex justify-between text-white font-semibold">
               <span>Total Amount</span>
               <span>₹{calculateFare() + Math.round(calculateFare() * 0.05)}</span>

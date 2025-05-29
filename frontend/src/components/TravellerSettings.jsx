@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 function TravellerSettings() {
     console.log('TravellerSettings component rendering');
     const { isDarkMode } = useTheme();
@@ -32,7 +34,7 @@ function TravellerSettings() {
                     return;
                 }
 
-                const res = await fetch('/api/travelers', {
+                const res = await fetch(`${API_BASE_URL}/api/travelers`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -71,7 +73,7 @@ function TravellerSettings() {
                 return;
             }
 
-            const res = await fetch('/api/travelers', {
+            const res = await fetch(`${API_BASE_URL}/api/travelers`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -123,7 +125,7 @@ function TravellerSettings() {
                 return;
             }
 
-            const res = await fetch(`/api/travelers/${updatedTraveller._id}`, {
+            const res = await fetch(`${API_BASE_URL}/api/travelers/${updatedTraveller._id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -168,7 +170,7 @@ function TravellerSettings() {
                 return;
             }
 
-            const res = await fetch(`/api/travelers/${id}`, {
+            const res = await fetch(`${API_BASE_URL}/api/travelers/${id}`, {
                 method: 'DELETE',
                 headers: {
                     Authorization: `Bearer ${token}`,

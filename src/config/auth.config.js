@@ -21,7 +21,7 @@ export const authConfig = {
   
   // API Configuration
   api: {
-    baseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000',
+    baseUrl: `https://bookxpress.onrender.com`,
     endpoints: {
       login: '/api/auth/login',
       signup: '/api/auth/signup',

@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { processPayment } from '../services/paymentService';
 
 // Add API base URL constant
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = 'https://bookxpress.onrender.com';
 
 function BookTickets() {
   const location = useLocation();

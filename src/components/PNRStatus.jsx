@@ -17,7 +17,7 @@ function PNRStatus() {
     console.log('Submitting PNR check for:', pnr);
 
     try {
-      const response = await fetch(`http://localhost:3000/api/pnr-status?pnr=${pnr}`);
+      const response = await fetch(`https://bookxpress.onrender.com/api/pnr-status?pnr=${pnr}`);
       const data = await response.json();
 
       console.log('Received PNR status response:', data);

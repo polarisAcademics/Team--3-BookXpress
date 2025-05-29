@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = 'https://bookxpress.onrender.com';
 
 function ManageTravelers() {
   const [travelers, setTravelers] = useState([]);

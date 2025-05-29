@@ -31,7 +31,7 @@ function MainContent() {
       return;
     }
     try {
-      const res = await fetch('http://localhost:3000/api/recent-searches', {
+      const res = await fetch('https://bookxpress.onrender.com/recent-searches', {
         headers: {
           Authorization: `Bearer ${token}`,
         },

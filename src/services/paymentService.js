@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/api/payment';
+const API_URL = 'https://bookxpress.onrender.com/api/payment';
 
 // Load Razorpay script dynamically
 export const loadRazorpayScript = () => {

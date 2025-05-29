@@ -52,7 +52,7 @@ function Hero({ appliedDiscount, onSearch }) {
       return;
     }
     try {
-      const response = await fetch(`http://localhost:3000/api/stations/autocomplete?query=${encodeURIComponent(query)}`);
+      const response = await fetch(`https://bookxpress.onrender.com/api/stations/autocomplete?query=${encodeURIComponent(query)}`);
       const data = await response.json();
       setSuggestions(data);
     } catch (error) {
@@ -142,7 +142,7 @@ function Hero({ appliedDiscount, onSearch }) {
       // Save search to backend and update recent searches
       try {
         const token = localStorage.getItem('token');
-        await fetch('http://localhost:3000/api/recent-searches', {
+        await fetch('https://bookxpress.onrender.com/api/recent-searches', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

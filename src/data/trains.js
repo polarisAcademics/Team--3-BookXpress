@@ -80,7 +80,7 @@ export const trains = [
     duration: "15h 35m",
     classes: ["1A", "2A", "3A", "SL"],
     fare: {
-      "1A": 3000,
+      "1A": 2300,
       "2A": 1750,
       "3A": 1025,
       "SL": 525

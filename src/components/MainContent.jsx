@@ -22,7 +22,7 @@ function MainContent() {
   const fetchRecentSearches = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:3000/api/recent-searches', {
+      const res = await fetch('https://bookxpress.onrender.com/api/recent-searches', {
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {})
         },

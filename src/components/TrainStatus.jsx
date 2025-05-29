@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = 'https://bookxpress.onrender.com';
 
 function TrainStatus() {
     const [trainNumber, setTrainNumber] = useState('');

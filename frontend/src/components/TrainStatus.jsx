@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import axios from 'axios';
 
-const API_BASE_URL = 'https://bookxpress.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 function TrainStatus() {
     const [trainNumber, setTrainNumber] = useState('');
@@ -15,17 +16,22 @@ function TrainStatus() {
         setError('');
         setLoading(true);
         setTrainStatus(null);
+        
         try {
-            const response = await fetch(`${API_BASE_URL}/api/train-status/trainstatus?trainNumber=${trainNumber}`);
-            const data = await response.json();
-            console.log('API response:', data);
-            const trainData = data.body?.[0]?.trains?.[0];
-            if (!response.ok || !trainData) {
+            const response = await axios.get(`${API_BASE_URL}/api/train-status`, {
+                params: { trainNumber }
+            });
+            
+            console.log('API response:', response.data);
+            
+            if (!response.data) {
                 throw new Error('No train data found. Please check the train number and try again.');
             }
-            setTrainStatus(trainData);
+            
+            setTrainStatus(response.data);
         } catch (err) {
-            setError(err.message);
+            console.error('Error fetching train status:', err);
+            setError(err.response?.data?.error || err.message || 'Failed to fetch train status');
         } finally {
             setLoading(false);
         }

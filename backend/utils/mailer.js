@@ -11,13 +11,13 @@ export const sendMail = async (email, pdfPath) => {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: 'demoirctc903@gmail.com',  
-      pass: 'wtmhbwtmsheksarl'     
+      user: process.env.USER,  
+      pass: process.env.PASSWORD  
     },
   });
 
   const mailOptions = {
-    from: 'demoirctc903@gmail.com',    
+    from: process.env.USER,    
     to: email,
     subject: 'Your Ticket',
     text: 'Here is your ticket PDF.',

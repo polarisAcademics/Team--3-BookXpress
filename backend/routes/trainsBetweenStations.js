@@ -1,49 +1,175 @@
 import express from 'express';
-import fetch from 'node-fetch';
 import { findStationCode } from './stations.js';
+import { rateLimiter } from '../middleware/rateLimiter.js';
+import fetch from 'node-fetch';
 
 const router = express.Router();
 
-// RapidAPI configuration
-const RAPIDAPI_KEY = 'ebf7e09943mshf9cc7351263f52fp1112c3jsn7f75bb41f2be';
+// API Configuration
+const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = 'irctc1.p.rapidapi.com';
 
-// Rate limiting configuration
-const rateLimit = new Map();
-const RATE_LIMIT_WINDOW = 60000; // 1 minute
-const MAX_REQUESTS = 10; // 10 requests per minute
+// Mock train data for testing and fallback
+const mockTrains = {
+  // Mumbai CST to New Delhi route
+  "CSTM-NDLS": [
+    {
+      train_number: "12951",
+      train_name: "Mumbai Rajdhani",
+      from: "CSTM",
+      to: "NDLS",
+      from_station_name: "Mumbai CST",
+      to_station_name: "New Delhi",
+      from_std: "16:35",
+      to_std: "08:35",
+      duration: "16h 00m",
+      class_type: ["1A", "2A", "3A"],
+      run_days: ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"],
+      train_type: "Rajdhani",
+      special_train: false,
+      fare: {
+        "1A": 4500,
+        "2A": 2800,
+        "3A": 1900
+      }
+    },
+    {
+      train_number: "12953",
+      train_name: "August Kranti Rajdhani",
+      from: "CSTM",
+      to: "NDLS",
+      from_station_name: "Mumbai CST",
+      to_station_name: "New Delhi",
+      from_std: "17:40",
+      to_std: "10:30",
+      duration: "16h 50m",
+      class_type: ["1A", "2A", "3A"],
+      run_days: ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"],
+      train_type: "Rajdhani",
+      special_train: false,
+      fare: {
+        "1A": 4300,
+        "2A": 2600,
+        "3A": 1800
+      }
+    },
+    {
+      train_number: "12909",
+      train_name: "Mumbai-Delhi Duronto",
+      from: "CSTM",
+      to: "NDLS",
+      from_station_name: "Mumbai CST",
+      to_station_name: "New Delhi",
+      from_std: "22:15",
+      to_std: "16:30",
+      duration: "18h 15m",
+      class_type: ["1A", "2A", "3A", "SL"],
+      run_days: ["MON", "WED", "FRI", "SUN"],
+      train_type: "Duronto",
+      special_train: false,
+      fare: {
+        "1A": 4200,
+        "2A": 2500,
+        "3A": 1700,
+        "SL": 850
+      }
+    }
+  ],
+  // New Delhi to Mumbai CST route (reverse direction)
+  "NDLS-CSTM": [
+    {
+      train_number: "12952",
+      train_name: "Mumbai Rajdhani",
+      from: "NDLS",
+      to: "CSTM",
+      from_station_name: "New Delhi",
+      to_station_name: "Mumbai CST",
+      from_std: "16:35",
+      to_std: "08:35",
+      duration: "16h 00m",
+      class_type: ["1A", "2A", "3A"],
+      run_days: ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"],
+      train_type: "Rajdhani",
+      special_train: false,
+      fare: {
+        "1A": 4500,
+        "2A": 2800,
+        "3A": 1900
+      }
+    },
+    {
+      train_number: "12954",
+      train_name: "August Kranti Rajdhani",
+      from: "NDLS",
+      to: "CSTM",
+      from_station_name: "New Delhi",
+      to_station_name: "Mumbai CST",
+      from_std: "17:40",
+      to_std: "10:30",
+      duration: "16h 50m",
+      class_type: ["1A", "2A", "3A"],
+      run_days: ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"],
+      train_type: "Rajdhani",
+      special_train: false,
+      fare: {
+        "1A": 4300,
+        "2A": 2600,
+        "3A": 1800
+      }
+    }
+  ]
+};
 
-// Rate limiting middleware
-const rateLimiter = (req, res, next) => {
-  const ip = req.ip;
-  const now = Date.now();
-  
-  if (!rateLimit.has(ip)) {
-    rateLimit.set(ip, {
-      count: 1,
-      resetTime: now + RATE_LIMIT_WINDOW
-    });
-    return next();
-  }
-  
-  const userLimit = rateLimit.get(ip);
-  
-  if (now > userLimit.resetTime) {
-    userLimit.count = 1;
-    userLimit.resetTime = now + RATE_LIMIT_WINDOW;
-    return next();
-  }
-  
-  if (userLimit.count >= MAX_REQUESTS) {
-    return res.status(429).json({
-      error: 'Too many requests',
-      message: 'Please try again after a minute',
-      retryAfter: Math.ceil((userLimit.resetTime - now) / 1000)
-    });
-  }
-  
-  userLimit.count++;
-  next();
+// Helper function to get mock data for any route
+const getMockTrainsForRoute = (fromCode, toCode) => {
+  // Try to find exact route match
+  const exactMatch = mockTrains[`${fromCode}-${toCode}`];
+  if (exactMatch) return exactMatch;
+
+  // If no exact match, generate some dummy data
+  return [
+    {
+      train_number: `${fromCode}${toCode}01`,
+      train_name: `${fromCode}-${toCode} Express`,
+      from: fromCode,
+      to: toCode,
+      from_station_name: fromCode,
+      to_station_name: toCode,
+      from_std: "06:00",
+      to_std: "18:00",
+      duration: "12h 00m",
+      class_type: ["1A", "2A", "3A", "SL"],
+      run_days: ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"],
+      train_type: "Express",
+      special_train: false,
+      fare: {
+        "1A": 3000,
+        "2A": 2000,
+        "3A": 1500,
+        "SL": 800
+      }
+    },
+    {
+      train_number: `${fromCode}${toCode}02`,
+      train_name: `${fromCode}-${toCode} Superfast`,
+      from: fromCode,
+      to: toCode,
+      from_station_name: fromCode,
+      to_station_name: toCode,
+      from_std: "15:00",
+      to_std: "03:00",
+      duration: "12h 00m",
+      class_type: ["2A", "3A", "SL"],
+      run_days: ["MON", "WED", "FRI", "SUN"],
+      train_type: "Superfast",
+      special_train: false,
+      fare: {
+        "2A": 1800,
+        "3A": 1200,
+        "SL": 600
+      }
+    }
+  ];
 };
 
 router.get('/', rateLimiter, async (req, res) => {
@@ -76,67 +202,80 @@ router.get('/', rateLimiter, async (req, res) => {
       });
     }
 
-    // Format date to YYYY-MM-DD if not already in that format
-    const formattedDate = date.includes('-') ? date : new Date(date).toISOString().split('T')[0];
+    let trainData;
+    let usedMockData = false;
 
-    // Construct API URL for train between stations
-    const url = `https://irctc1.p.rapidapi.com/api/v3/trainBetweenStations?fromStationCode=${fromCode}&toStationCode=${toCode}&dateOfJourney=${formattedDate}`;
-    
-    console.log('Making API request to:', url);
-    
-    // Make API request
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'x-rapidapi-key': RAPIDAPI_KEY,
-        'x-rapidapi-host': RAPIDAPI_HOST
+    try {
+      // First try to get data from the API
+      if (RAPIDAPI_KEY) {
+        const formattedDate = date.includes('-') ? date : new Date(date).toISOString().split('T')[0];
+        const url = `https://irctc1.p.rapidapi.com/api/v3/trainBetweenStations?fromStationCode=${fromCode}&toStationCode=${toCode}&dateOfJourney=${formattedDate}`;
+        
+        console.log('Attempting API request to:', url);
+        
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'x-rapidapi-key': RAPIDAPI_KEY,
+            'x-rapidapi-host': RAPIDAPI_HOST
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`);
+        }
+
+        const apiData = await response.json();
+        if (apiData.data && Array.isArray(apiData.data) && apiData.data.length > 0) {
+          trainData = apiData.data;
+        } else {
+          throw new Error('No train data received from API');
+        }
+      } else {
+        throw new Error('RAPIDAPI_KEY not configured');
       }
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('API Error Response:', {
-        status: response.status,
-        statusText: response.statusText,
-        errorData
-      });
-      throw new Error(errorData.message || `API request failed with status ${response.status}`);
+    } catch (apiError) {
+      console.log('API request failed, falling back to mock data:', apiError.message);
+      // If API call fails, use mock data
+      trainData = getMockTrainsForRoute(fromCode, toCode);
+      usedMockData = true;
     }
 
-    const responseData = await response.json();
-    console.log('Raw API Response:', JSON.stringify(responseData, null, 2));
-
-    // Transform the response to match frontend expectations
+    // Transform the data to match frontend expectations
     const transformedData = {
       status: true,
       fromCity: fromStation,
       toCity: toStation,
       fromCode,
       toCode,
-      date: responseData.data?.[0]?.train_date || formattedDate,
-      trains: Array.isArray(responseData.data) ? responseData.data.map(train => ({
-        trainNumber: train.train_number,
-        trainName: train.train_name,
+      date,
+      usedMockData, // Flag to indicate if we used mock data
+      trains: trainData.map(train => ({
+        trainNumber: train.train_number || train.trainNumber,
+        trainName: train.train_name || train.trainName,
         fromStation: {
           code: train.from,
-          name: train.from_station_name,
-          departure: train.from_std
+          name: train.from_station_name || fromStation,
+          departure: train.from_std || train.departure
         },
         toStation: {
           code: train.to,
-          name: train.to_station_name,
-          arrival: train.to_std
+          name: train.to_station_name || toStation,
+          arrival: train.to_std || train.arrival
         },
         duration: train.duration,
-        availableClasses: train.class_type || ['1A', '2A', '3A', 'SL'],
-        runningDays: train.run_days || ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'],
-        trainType: train.train_type,
-        specialTrain: train.special_train,
-        journeyDate: train.train_date
-      })) : []
+        availableClasses: train.class_type || train.availableClasses || ["1A", "2A", "3A", "SL"],
+        runningDays: train.run_days || train.runningDays || ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"],
+        trainType: train.train_type || train.trainType || "Express",
+        specialTrain: train.special_train || false,
+        fare: train.fare || {
+          "1A": 3000,
+          "2A": 2000,
+          "3A": 1500,
+          "SL": 800
+        }
+      }))
     };
-
-    console.log('Transformed Data:', JSON.stringify(transformedData, null, 2));
 
     res.json(transformedData);
   } catch (error) {

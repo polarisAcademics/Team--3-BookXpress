@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
-const API_BASE_URL = 'https://bookxpress.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 function ManageTravelers() {
   const [travelers, setTravelers] = useState([]);
@@ -10,7 +11,7 @@ function ManageTravelers() {
   const [formData, setFormData] = useState({
     name: '',
     age: '',
-    gender: 'male',
+    gender: 'Male',
     berthPreference: 'lower'
   });
 
@@ -20,30 +21,12 @@ function ManageTravelers() {
   }, []);
 
   const fetchTravelers = async () => {
+    setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('Please login to view saved travelers');
-        setLoading(false);
-        return;
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/travelers`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch travelers');
-      }
-
-      const data = await response.json();
-      setTravelers(data);
-      setError(null);
-    } catch (error) {
-      setError(error.message);
+      const response = await axios.get(`${API_BASE_URL}/api/travelers`);
+      setTravelers(response.data);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to fetch travelers');
     } finally {
       setLoading(false);
     }
@@ -60,93 +43,39 @@ function ManageTravelers() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('Please login to save travelers');
-        return;
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/travelers`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save traveler');
-      }
-
-      const savedTraveler = await response.json();
-      setTravelers(prev => [...prev, savedTraveler]);
+      const response = await axios.post(`${API_BASE_URL}/api/travelers`, formData);
+      setTravelers(prev => [...prev, response.data]);
       setFormData({
         name: '',
         age: '',
-        gender: 'male',
+        gender: 'Male',
         berthPreference: 'lower'
       });
       setError(null);
-    } catch (error) {
-      setError(error.message);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to save traveler');
     }
   };
 
   const handleDelete = async (id) => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('Please login to delete travelers');
-        return;
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/travelers/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete traveler');
-      }
-
+      await axios.delete(`${API_BASE_URL}/api/travelers/${id}`);
       setTravelers(prev => prev.filter(t => t._id !== id));
       setError(null);
-    } catch (error) {
-      setError(error.message);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to delete traveler');
     }
   };
 
   const handleSetDefault = async (id) => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('Please login to set default traveler');
-        return;
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/travelers/${id}/set-default`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to set default traveler');
-      }
-
-      const updatedTraveler = await response.json();
+      const response = await axios.patch(`${API_BASE_URL}/api/travelers/${id}/set-default`);
       setTravelers(prev => prev.map(t => 
         t._id === id ? { ...t, isDefault: true } : { ...t, isDefault: false }
       ));
       setError(null);
-    } catch (error) {
-      setError(error.message);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to set default traveler');
     }
   };
 
@@ -205,8 +134,8 @@ function ManageTravelers() {
                 onChange={handleInputChange}
                 className="w-full bg-[#2a3147] text-white px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-[#3b63f7]"
               >
-                <option value="male">Male</option>
-                <option value="female">Female</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
                 <option value="other">Other</option>
               </select>
             </div>

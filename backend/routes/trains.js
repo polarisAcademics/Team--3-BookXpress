@@ -1,7 +1,7 @@
 import express from 'express';
 import fetch from 'node-fetch';
 
-const API_KEY = 'd15f05b26amshc2c90427a2f6385p119c29jsn71e9babc3196';
+const TRAINS_API_KEY = process.env.TRAINS_API_KEY;
 const router = express.Router();
 
 // Temporary train data (replace with actual database later)
@@ -57,7 +57,7 @@ router.get('/station-suggestions', async (req, res) => {
   }
 
   try {
-    const url = `http://indianrailapi.com/api/v2/AutoComplete/apikey/${API_KEY}/term/${encodeURIComponent(query)}`;
+    const url = `http://indianrailapi.com/api/v2/AutoComplete/apikey/${TRAINS_API_KEY}/term/${encodeURIComponent(query)}`;
     const response = await fetch(url);
     const data = await response.json();
 

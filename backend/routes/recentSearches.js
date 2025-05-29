@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 const router = express.Router();
 
 // Use the same JWT secret as in auth.routes.js
-const JWT_SECRET = process.env.JWT_SECRET || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiZGFyc2hpdCIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0ODMyOTQxNn0.YP1jIFH38LEkEdXailiPB_EZzKpcixQcLqxODG0Bb7c';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Simple JWT authentication middleware
 function authenticate(req, res, next) {

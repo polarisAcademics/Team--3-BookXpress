@@ -71,9 +71,20 @@ export const authService = {
 
   async signup(userData) {
     try {
+      console.log('Sending signup request with data:', {
+        ...userData,
+        password: userData.password ? '[REDACTED]' : undefined
+      });
+      
       const response = await api.post(authConfig.api.endpoints.signup, userData);
       return response.data;
     } catch (error) {
+      console.error('Signup error details:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
       throw new Error(error.response?.data?.message || 'Signup failed');
     }
   },

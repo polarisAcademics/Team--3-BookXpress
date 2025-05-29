@@ -19,6 +19,9 @@ import BookTickets from './components/BookTickets';
 import MyBookings from './components/MyBookings';
 import Settings from './components/Settings';
 import BookingSuccess from './components/BookingSuccess';
+import axios from 'axios';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 function MainContent() {
   const [recentSearches, setRecentSearches] = useState([]);
@@ -31,7 +34,7 @@ function MainContent() {
       return;
     }
     try {
-      const res = await fetch('https://bookxpress.onrender.com/recent-searches', {
+      const res = await fetch(`${API_BASE_URL}/api/recent-searches`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -92,6 +95,22 @@ try {
 }
 
 function App() {
+  const [recentSearches, setRecentSearches] = useState([]);
+
+  useEffect(() => {
+    const fetchRecentSearches = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/recent-searches`);
+        setRecentSearches(response.data);
+      } catch (err) {
+        console.warn('Failed to fetch recent searches:', err);
+        setRecentSearches([]);
+      }
+    };
+
+    fetchRecentSearches();
+  }, []);
+
   return (
     <Router>
       <ThemeProvider>

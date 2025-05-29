@@ -7,8 +7,7 @@ import multer from 'multer';
 const router = express.Router();
 
 // JWT Secret from environment variable
-const JWT_SECRET = process.env.JWT_SECRET || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiZGFyc2hpdCIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0ODMyOTQxNn0.YP1jIFH38LEkEdXailiPB_EZzKpcixQcLqxODG0Bb7c';
-
+const JWT_SECRET = process.env.JWT_SECRET || '2c7c38fa6176b7db559c2f9e86f9b53d33125685022574386639ad43468b019dd061be65ba76e377253f2c44fcf640153686cd896f11bc30b3fe3eab3f39e3b2';
 // Set up multer for file uploads
 // TODO: Configure storage location and filename
 const upload = multer({ dest: 'uploads/' }); // Temporary destination
@@ -16,10 +15,20 @@ const upload = multer({ dest: 'uploads/' }); // Temporary destination
 // Signup route
 router.post('/signup', async (req, res) => {
   try {
+    console.log('Received signup request with data:', {
+      ...req.body,
+      password: req.body.password ? '[REDACTED]' : undefined
+    });
+    
     const { name, email, password } = req.body;
 
     // Validate required fields
     if (!name || !email || !password) {
+      console.log('Missing required fields:', {
+        name: !name,
+        email: !email,
+        password: !password
+      });
       return res.status(400).json({ 
         message: 'Missing required fields',
         details: {

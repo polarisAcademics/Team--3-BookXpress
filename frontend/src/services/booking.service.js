@@ -1,4 +1,6 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://bookxpress.onrender.com';
+import axios from 'axios';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 class BookingService {
   // Get authentication headers
@@ -57,22 +59,10 @@ class BookingService {
   // Create a direct booking (legacy method)
   async createBooking(bookingData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/bookings`, {
-        method: 'POST',
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify(bookingData)
-      });
-
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to create booking');
-      }
-
-      return data;
+      const response = await axios.post(`${API_BASE_URL}/api/bookings`, bookingData);
+      return response.data;
     } catch (error) {
-      console.error('Error creating booking:', error);
-      throw error;
+      throw new Error(error.response?.data?.message || 'Failed to create booking');
     }
   }
 
@@ -259,6 +249,15 @@ class BookingService {
       'COMPLETED': '🎯'
     };
     return icons[status] || '❓';
+  }
+
+  async getBookings() {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/bookings`);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch bookings');
+    }
   }
 }
 

@@ -4,15 +4,18 @@ import { trains, additionalTrains } from '../data/trains';
 import TrainList from './TrainList';
 import { useNavigate } from 'react-router-dom';
 import { trainsService } from '../services/trains.service';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
+import axios from 'axios';
 
-// const API_BASE_URL = 'http://localhost:3000'; // API call moved to Hero.jsx
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 function Hero({ appliedDiscount, onSearch }) {
   console.log('Hero rendering with appliedDiscount prop:', appliedDiscount);
   const [formData, setFormData] = useState({
-    from: '',
-    to: '',
-    date: '',
+    fromStation: "Mumbai CST",
+    toStation: "New Delhi",
+    date: new Date(2025, 4, 31), // May 31, 2025
     classType: '',
     quota: 'general',
   });
@@ -52,9 +55,10 @@ function Hero({ appliedDiscount, onSearch }) {
       return;
     }
     try {
-      const response = await fetch(`https://bookxpress.onrender.com/api/stations/autocomplete?query=${encodeURIComponent(query)}`);
-      const data = await response.json();
-      setSuggestions(data);
+      const response = await axios.get(`${API_BASE_URL}/api/stations/autocomplete`, {
+        params: { query }
+      });
+      setSuggestions(response.data);
     } catch (error) {
       console.error('Error fetching station suggestions:', error);
       setSuggestions([]);
@@ -67,10 +71,10 @@ function Hero({ appliedDiscount, onSearch }) {
     setFormData(prev => ({ ...prev, [name]: value }));
     
     // Fetch suggestions for the changed field
-    if (name === 'from') {
+    if (name === 'fromStation') {
       fetchStationSuggestions(value, setFromSuggestions);
       setShowFromSuggestions(true);
-    } else if (name === 'to') {
+    } else if (name === 'toStation') {
       fetchStationSuggestions(value, setToSuggestions);
       setShowToSuggestions(true);
     }
@@ -82,7 +86,7 @@ function Hero({ appliedDiscount, onSearch }) {
       ...prev,
       [field]: suggestion.station
     }));
-    if (field === 'from') {
+    if (field === 'fromStation') {
       setShowFromSuggestions(false);
     } else {
       setShowToSuggestions(false);
@@ -103,9 +107,9 @@ function Hero({ appliedDiscount, onSearch }) {
 
     try {
       const response = await trainsService.getTrainsBetweenStations(
-        formData.from,
-        formData.to,
-        formData.date
+        formData.fromStation,
+        formData.toStation,
+        formData.date.toISOString().split('T')[0]
       );
 
       if (!response.status) {
@@ -139,24 +143,15 @@ function Hero({ appliedDiscount, onSearch }) {
       setSearchResults(transformedTrains);
       setShowResults(true);
 
-      // Save search to backend and update recent searches
+      // Save search to backend
       try {
-        const token = localStorage.getItem('token');
-        await fetch('https://bookxpress.onrender.com/api/recent-searches', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-          },
-          body: JSON.stringify({
-            from: formData.from,
-            to: formData.to,
-            date: formData.date,
-          }),
+        await saveSearch({
+          from: formData.fromStation,
+          to: formData.toStation,
+          date: formData.date.toISOString().split('T')[0],
         });
       } catch (err) {
         console.warn('Failed to save recent search:', err);
-        // Continue execution even if saving recent search fails
       }
       
       if (onSearch) onSearch(formData);
@@ -179,6 +174,22 @@ function Hero({ appliedDiscount, onSearch }) {
     });
   };
 
+  const handleDateChange = (date) => {
+    setFormData(prev => ({
+      ...prev,
+      date
+    }));
+  };
+
+  // Save search to backend
+  const saveSearch = async (searchData) => {
+    try {
+      await axios.post(`${API_BASE_URL}/api/recent-searches`, searchData);
+    } catch (err) {
+      console.warn('Failed to save recent search:', err);
+    }
+  };
+
   return (
     <section className="relative bg-theme-primary py-20 text-theme-primary">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -194,8 +205,8 @@ function Hero({ appliedDiscount, onSearch }) {
                 <label className="block text-theme-secondary text-sm font-medium mb-2">From Station</label>
                 <input
                   type="text"
-                  name="from"
-                  value={formData.from}
+                  name="fromStation"
+                  value={formData.fromStation}
                   onChange={handleInputChange}
                   onFocus={() => setShowFromSuggestions(true)}
                   placeholder="Enter city or station"
@@ -208,7 +219,7 @@ function Hero({ appliedDiscount, onSearch }) {
                       <div
                         key={index}
                         className="px-4 py-2 text-sm text-theme-primary hover:bg-[var(--accent-color)] hover:text-white cursor-pointer"
-                        onClick={() => handleSuggestionSelect(suggestion, 'from')}
+                        onClick={() => handleSuggestionSelect(suggestion, 'fromStation')}
                       >
                         <div className="font-medium">{suggestion.station}</div>
                         <div className="text-sm text-gray-500">{suggestion.city} ({suggestion.code})</div>
@@ -222,8 +233,8 @@ function Hero({ appliedDiscount, onSearch }) {
                 <label className="block text-theme-secondary text-sm font-medium mb-2">To Station</label>
                 <input
                   type="text"
-                  name="to"
-                  value={formData.to}
+                  name="toStation"
+                  value={formData.toStation}
                   onChange={handleInputChange}
                   onFocus={() => setShowToSuggestions(true)}
                   placeholder="Enter city or station"
@@ -236,7 +247,7 @@ function Hero({ appliedDiscount, onSearch }) {
                       <div
                         key={index}
                         className="px-4 py-2 text-sm text-theme-primary hover:bg-[var(--accent-color)] hover:text-white cursor-pointer"
-                        onClick={() => handleSuggestionSelect(suggestion, 'to')}
+                        onClick={() => handleSuggestionSelect(suggestion, 'toStation')}
                       >
                         <div className="font-medium">{suggestion.station}</div>
                         <div className="text-sm text-gray-500">{suggestion.city} ({suggestion.code})</div>
@@ -250,12 +261,13 @@ function Hero({ appliedDiscount, onSearch }) {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label className="block text-theme-secondary text-sm font-medium mb-2">Journey Date</label>
-                <input
-                  type="date"
-                  name="date"
-                  value={formData.date}
-                  onChange={handleInputChange}
+                <DatePicker
+                  selected={formData.date}
+                  onChange={handleDateChange}
+                  dateFormat="yyyy-MM-dd"
+                  minDate={new Date()}
                   className="w-full bg-theme-primary text-theme-primary rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
+                  placeholderText="Select date"
                   required
                 />
               </div>

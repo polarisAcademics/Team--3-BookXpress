@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react'; // Import useState, useCallback, useEffect
 import { useLocation } from 'react-router-dom';
+import axios from 'axios';
 // Import components used in MainContent
 import Hero from './Hero';
 import PNRStatus from './PNRStatus';
@@ -11,34 +12,32 @@ import Footer from './Footer'; // Footer is likely in App.jsx, but keeping impor
 import DownloadTickets from './DownloadTickets';
 import { trains, additionalTrains } from '../data/trains'; // Import hardcoded train data
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 function MainContent() {
   const [appliedDiscount, setAppliedDiscount] = useState(null); // State for applied discount
   const [searchResults, setSearchResults] = useState([]); // State to store filtered results
   const [showResults, setShowResults] = useState(false); // State to control results display
   const [lastSearchFormData, setLastSearchFormData] = useState(null); // State to store the last search form data
   const [recentSearches, setRecentSearches] = useState([]);
-
-  // Function to fetch recent searches from backend
-  const fetchRecentSearches = useCallback(async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('https://bookxpress.onrender.com/api/recent-searches', {
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-      });
-      if (!res.ok) throw new Error('Failed to fetch');
-      const data = await res.json();
-      setRecentSearches(data);
-    } catch (err) {
-      console.warn('Failed to fetch recent searches:', err);
-      setRecentSearches([]);
-    }
-  }, []);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    const fetchRecentSearches = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/recent-searches`);
+        setRecentSearches(response.data);
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to fetch recent searches');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchRecentSearches();
-  }, [fetchRecentSearches]);
+  }, []);
 
   const handleApplyOffer = (offer) => {
     console.log('Offer applied:', offer);

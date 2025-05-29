@@ -169,8 +169,8 @@ function Profile() {
                 <label className="block text-theme-secondary mb-1">Gender</label>
                 <select name="gender" value={profile.gender} onChange={handleChange} className="w-full bg-theme-primary text-theme-primary rounded px-3 py-2">
                   <option value="">Select</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
                   <option value="other">Other</option>
                 </select>
               </div>

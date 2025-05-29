@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': 'https://bookxpress.onrender.com',
+      '/api': import.meta.env.VITE_API_URL || 'http://localhost:3000',
     },
   },
 })

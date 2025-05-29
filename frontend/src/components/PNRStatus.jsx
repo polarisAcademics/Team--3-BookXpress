@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import { useTheme } from '../context/ThemeContext';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 function PNRStatus() {
   const [pnr, setPnr] = useState('');
@@ -17,20 +20,14 @@ function PNRStatus() {
     console.log('Submitting PNR check for:', pnr);
 
     try {
-      const response = await fetch(`https://bookxpress.onrender.com/api/pnr-status?pnr=${pnr}`);
-      const data = await response.json();
-
-      console.log('Received PNR status response:', data);
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch PNR status');
-      }
-
-      setPnrStatus(data);
-      console.log('PNR status updated:', data);
+      const response = await axios.get(`${API_BASE_URL}/api/pnr-status`, {
+        params: { pnr }
+      });
+      setPnrStatus(response.data);
+      console.log('PNR status updated:', response.data);
     } catch (err) {
       console.error('Error fetching PNR status:', err);
-      setError(err.message);
+      setError(err.response?.data?.message || 'Failed to fetch PNR status');
     } finally {
       setLoading(false);
     }

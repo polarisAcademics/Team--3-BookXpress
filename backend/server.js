@@ -25,7 +25,7 @@ const app = express();
 
 // CORS configuration
 app.use(cors({
-  origin: 'https://bookxpress.netlify.app',
+  origin: [process.env.FRONTEND_URL, 'http://localhost:5173'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));

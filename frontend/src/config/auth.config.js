@@ -21,7 +21,7 @@ export const authConfig = {
   
   // API Configuration
   api: {
-    baseUrl: `https://bookxpress.onrender.com`,
+    baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:3000',
     endpoints: {
       login: '/api/auth/login',
       signup: '/api/auth/signup',
@@ -31,4 +31,15 @@ export const authConfig = {
       githubAuth: '/api/auth/github',
     },
   },
-}; 
+};
+
+// API endpoints and configuration
+const config = {
+  // Use import.meta.env for Vite environment variables
+  AUTH_HEADER: 'x-access-token',
+  TOKEN_KEY: 'auth-token',
+  USER_KEY: 'user',
+  REFRESH_TOKEN_KEY: 'refresh-token',
+};
+
+export default config; 

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { processPayment } from '../services/paymentService';
+import axios from 'axios';
 
 // Add API base URL constant
-const API_BASE_URL = 'https://bookxpress.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 function BookTickets() {
   const location = useLocation();
@@ -13,7 +14,7 @@ function BookTickets() {
 
   const [formData, setFormData] = useState({
     passengers: [
-      { name: '', age: '', gender: 'male', berthPreference: 'lower' }
+      { name: '', age: '', gender: 'Male', seatPreference: 'Lower' }
     ],
     contact: {
       name: '',
@@ -91,7 +92,7 @@ function BookTickets() {
       ...prev,
       passengers: [
         ...prev.passengers,
-        { name: '', age: '', gender: 'male', berthPreference: 'lower' }
+        { name: '', age: '', gender: 'Male', seatPreference: 'Lower' }
       ]
     }));
   };
@@ -111,7 +112,16 @@ function BookTickets() {
         return;
       }
 
-      console.log('Token from localStorage:', token);
+      // Convert passenger data to match backend schema
+      const travelerData = {
+        name: passenger.name,
+        age: parseInt(passenger.age),
+        gender: passenger.gender,
+        seatPreference: passenger.berthPreference || passenger.seatPreference,
+        nationality: 'Indian'
+      };
+
+      console.log('Sending traveler data:', travelerData);
 
       const response = await fetch(`${API_BASE_URL}/api/travelers`, {
         method: 'POST',
@@ -119,7 +129,7 @@ function BookTickets() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(passenger)
+        body: JSON.stringify(travelerData)
       });
 
       console.log('Response status:', response.status);
@@ -131,11 +141,11 @@ function BookTickets() {
         if (errorData.error === 'Token expired') {
           localStorage.removeItem('token');
           alert('Your session has expired. Please login again.');
-          // You might want to redirect to login page here
+          navigate('/login');
           return;
         }
         
-        throw new Error(errorData.details || errorData.error || 'Failed to save traveler');
+        throw new Error(errorData.error || 'Failed to save traveler');
       }
 
       const savedTraveler = await response.json();
@@ -146,7 +156,7 @@ function BookTickets() {
       if (error.message.includes('Invalid token') || error.message.includes('Token expired')) {
         localStorage.removeItem('token');
         alert('Your session has expired. Please login again.');
-        // You might want to redirect to login page here
+        navigate('/login');
       } else {
         alert(error.message || 'Failed to save traveler. Please try again later.');
       }
@@ -157,9 +167,9 @@ function BookTickets() {
     const updatedPassengers = [...formData.passengers];
     updatedPassengers[selectedTravelerIndex] = {
       name: traveler.name,
-      age: traveler.age,
+      age: traveler.age.toString(),
       gender: traveler.gender,
-      berthPreference: traveler.berthPreference
+      seatPreference: traveler.seatPreference || 'Lower'
     };
     setFormData(prev => ({
       ...prev,
@@ -255,6 +265,21 @@ function BookTickets() {
     }
     
     return true;
+  };
+
+  const handleBooking = async () => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/bookings`, {
+        trainDetails: selectedTrain,
+        passengers: formData.passengers,
+        totalAmount: calculateFare()
+      });
+      
+      // Handle successful booking
+      navigate('/booking-confirmation', { state: { booking: response.data } });
+    } catch (err) {
+      setPaymentError(err.response?.data?.message || 'Failed to create booking');
+    }
   };
 
   // Display selected train details if available
@@ -364,23 +389,23 @@ function BookTickets() {
                     onChange={(e) => handlePassengerChange(index, 'gender', e.target.value)}
                     className="w-full bg-[#1e2535] text-white rounded px-3 py-2"
                   >
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-[#7a8bbf] mb-2">Berth Preference</label>
                   <select
-                    value={passenger.berthPreference}
-                    onChange={(e) => handlePassengerChange(index, 'berthPreference', e.target.value)}
+                    value={passenger.seatPreference}
+                    onChange={(e) => handlePassengerChange(index, 'seatPreference', e.target.value)}
                     className="w-full bg-[#1e2535] text-white rounded px-3 py-2"
                   >
-                    <option value="lower">Lower</option>
-                    <option value="middle">Middle</option>
-                    <option value="upper">Upper</option>
-                    <option value="side-lower">Side Lower</option>
-                    <option value="side-upper">Side Upper</option>
+                    <option value="Lower">Lower</option>
+                    <option value="Middle">Middle</option>
+                    <option value="Upper">Upper</option>
+                    <option value="Side-Lower">Side Lower</option>
+                    <option value="Side-Upper">Side Upper</option>
                   </select>
                 </div>
               </div>

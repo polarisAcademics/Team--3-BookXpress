@@ -169,139 +169,256 @@ router.get('/bookings', async (req, res) => {
   }
 });
 
-// RazorpayX Webhook endpoint - handles only available events
-router.post('/webhook', express.json(), async (req, res) => {
+// Authentic Razorpay Webhook endpoint - handles standard payment events
+router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   try {
-    console.log('🔔 RazorpayX Webhook received');
-    console.log('📄 Event:', req.body.event);
-    console.log('📄 Payload:', JSON.stringify(req.body, null, 2));
+    console.log('🔔 Razorpay Webhook received');
     
-    const { event, payload } = req.body;
+    // Parse the webhook payload
+    const webhookBody = req.body.toString();
+    const webhookSignature = req.headers['x-razorpay-signature'];
     
-    // Handle only the 4 available RazorpayX events
+    console.log('📄 Webhook signature:', webhookSignature);
+    console.log('📄 Webhook body:', webhookBody);
+    
+    // Verify webhook signature (optional but recommended)
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    if (webhookSecret && webhookSignature) {
+      const expectedSignature = crypto
+        .createHmac('sha256', webhookSecret)
+        .update(webhookBody)
+        .digest('hex');
+      
+      if (expectedSignature !== webhookSignature) {
+        console.log('❌ Webhook signature verification failed');
+        return res.status(400).json({ error: 'Invalid signature' });
+      }
+      console.log('✅ Webhook signature verified');
+    }
+    
+    // Parse the JSON payload
+    const payload = JSON.parse(webhookBody);
+    const { event, payload: eventPayload } = payload;
+    
+    console.log(`📥 Webhook Event: ${event}`);
+    console.log('📄 Event payload:', JSON.stringify(eventPayload, null, 2));
+    
+    // Handle different Razorpay webhook events
     switch (event) {
-      case 'fund_account.validation.completed':
-        console.log('✅ Fund account validation completed');
-        // This indicates account is ready for transactions
+      case 'payment.captured':
+        console.log('💰 Payment captured - processing...');
+        await handlePaymentCaptured(eventPayload.payment.entity);
         break;
         
-      case 'transaction.created':
-        console.log('💳 Transaction created - potential payment');
-        await handleTransactionCreated(payload);
+      case 'payment.failed':
+        console.log('❌ Payment failed - processing...');
+        await handlePaymentFailed(eventPayload.payment.entity);
         break;
         
-      case 'payout.processed':
-        console.log('✅ Payout processed - payment success indicator');
-        await handlePayoutProcessed(payload);
+      case 'payment.authorized':
+        console.log('🔐 Payment authorized - processing...');
+        await handlePaymentAuthorized(eventPayload.payment.entity);
         break;
         
-      case 'payout.rejected':
-        console.log('❌ Payout rejected - payment failure indicator');
-        await handlePayoutRejected(payload);
+      case 'order.paid':
+        console.log('📋 Order paid - processing...');
+        await handleOrderPaid(eventPayload.order.entity);
+        break;
+        
+      case 'refund.created':
+        console.log('💸 Refund created - processing...');
+        await handleRefundCreated(eventPayload.refund.entity);
+        break;
+        
+      case 'refund.processed':
+        console.log('✅ Refund processed - processing...');
+        await handleRefundProcessed(eventPayload.refund.entity);
         break;
         
       default:
-        console.log(`ℹ️ Unhandled event: ${event}`);
+        console.log(`ℹ️ Unhandled webhook event: ${event}`);
     }
     
-    // Always respond with success
+    // Always respond with success to acknowledge receipt
     res.status(200).json({
       status: 'success',
-      message: 'Webhook processed',
+      message: 'Webhook processed successfully',
       event: event
     });
     
   } catch (error) {
-    console.error('❌ Webhook error:', error);
-    res.status(200).json({
+    console.error('❌ Webhook processing error:', error);
+    res.status(500).json({
       status: 'error',
-      message: 'Webhook processed with error',
+      message: 'Webhook processing failed',
       error: error.message
     });
   }
 });
 
-// Handle transaction.created event
-async function handleTransactionCreated(payload) {
+// Handle payment.captured event
+async function handlePaymentCaptured(payment) {
   try {
-    console.log('📋 Processing transaction.created');
+    console.log(`💰 Processing payment.captured: ${payment.id}`);
     
-    if (payload && payload.transaction && payload.transaction.entity) {
-      const transaction = payload.transaction.entity;
+    // Find booking by order_id and update status
+    const booking = confirmedBookings.find(b => 
+      b.orderId === payment.order_id || 
+      b.paymentId === payment.id
+    );
+    
+    if (booking) {
+      booking.status = 'CONFIRMED';
+      booking.paymentStatus = 'COMPLETED';
+      booking.paymentId = payment.id;
+      booking.capturedAt = new Date();
+      booking.amount = payment.amount / 100; // Convert from paisa to rupees
       
-      // Create a simple booking record
-      const booking = {
+      console.log(`✅ Booking confirmed via webhook: ${booking.id}`);
+    } else {
+      // Create new booking from payment data if not found
+      const newBooking = {
         id: generatePNR(),
-        transactionId: transaction.id,
-        amount: transaction.amount ? transaction.amount / 100 : 0,
-        currency: transaction.currency || 'INR',
-        status: 'PENDING',
+        orderId: payment.order_id,
+        paymentId: payment.id,
+        amount: payment.amount / 100,
+        currency: payment.currency,
+        status: 'CONFIRMED',
+        paymentStatus: 'COMPLETED',
+        method: payment.method,
+        capturedAt: new Date(),
         createdAt: new Date(),
-        source: 'webhook_transaction'
+        source: 'webhook_payment_captured'
       };
       
-      // Add to temporary storage (you can enhance this later)
-      confirmedBookings.push(booking);
-      console.log(`✅ Booking created from transaction: ${booking.id}`);
+      confirmedBookings.push(newBooking);
+      console.log(`✅ New booking created from webhook: ${newBooking.id}`);
     }
-    
+
   } catch (error) {
-    console.error('❌ Error handling transaction.created:', error);
+    console.error('❌ Error handling payment.captured:', error);
+    throw error;
   }
 }
 
-// Handle payout.processed event
-async function handlePayoutProcessed(payload) {
+// Handle payment.failed event
+async function handlePaymentFailed(payment) {
   try {
-    console.log('✅ Processing payout.processed');
+    console.log(`❌ Processing payment.failed: ${payment.id}`);
     
-    if (payload && payload.payout && payload.payout.entity) {
-      const payout = payload.payout.entity;
+    // Find booking by order_id and update status
+    const booking = confirmedBookings.find(b => 
+      b.orderId === payment.order_id || 
+      b.paymentId === payment.id
+    );
+    
+    if (booking) {
+      booking.status = 'FAILED';
+      booking.paymentStatus = 'FAILED';
+      booking.paymentId = payment.id;
+      booking.failedAt = new Date();
+      booking.errorCode = payment.error_code;
+      booking.errorDescription = payment.error_description;
       
-      // Find and update booking status to success
-      const booking = confirmedBookings.find(b => 
-        b.transactionId === payout.reference_id || 
-        b.amount === (payout.amount / 100)
-      );
-      
-      if (booking) {
-        booking.status = 'CONFIRMED';
-        booking.payoutId = payout.id;
-        booking.updatedAt = new Date();
-        console.log(`✅ Booking confirmed: ${booking.id}`);
-      }
+      console.log(`❌ Booking failed via webhook: ${booking.id}`);
     }
-    
+
   } catch (error) {
-    console.error('❌ Error handling payout.processed:', error);
+    console.error('❌ Error handling payment.failed:', error);
+    throw error;
   }
 }
 
-// Handle payout.rejected event
-async function handlePayoutRejected(payload) {
+// Handle payment.authorized event
+async function handlePaymentAuthorized(payment) {
   try {
-    console.log('❌ Processing payout.rejected');
+    console.log(`🔐 Processing payment.authorized: ${payment.id}`);
     
-    if (payload && payload.payout && payload.payout.entity) {
-      const payout = payload.payout.entity;
+    // Find booking by order_id and update status
+    const booking = confirmedBookings.find(b => 
+      b.orderId === payment.order_id
+    );
+    
+    if (booking) {
+      booking.status = 'AUTHORIZED';
+      booking.paymentStatus = 'AUTHORIZED';
+      booking.paymentId = payment.id;
+      booking.authorizedAt = new Date();
       
-      // Find and update booking status to failed
-      const booking = confirmedBookings.find(b => 
-        b.transactionId === payout.reference_id || 
-        b.amount === (payout.amount / 100)
-      );
-      
-      if (booking) {
-        booking.status = 'FAILED';
-        booking.payoutId = payout.id;
-        booking.updatedAt = new Date();
-        booking.failureReason = payout.failure_reason || 'Payout rejected';
-        console.log(`❌ Booking failed: ${booking.id}`);
-      }
+      console.log(`🔐 Booking authorized via webhook: ${booking.id}`);
     }
-    
+
   } catch (error) {
-    console.error('❌ Error handling payout.rejected:', error);
+    console.error('❌ Error handling payment.authorized:', error);
+    throw error;
+  }
+}
+
+// Handle order.paid event
+async function handleOrderPaid(order) {
+  try {
+    console.log(`📋 Processing order.paid: ${order.id}`);
+    
+    // Find booking by order_id and update status
+    const booking = confirmedBookings.find(b => b.orderId === order.id);
+    
+    if (booking) {
+      booking.status = 'PAID';
+      booking.paymentStatus = 'COMPLETED';
+      booking.paidAt = new Date();
+      booking.amountPaid = order.amount_paid / 100;
+      
+      console.log(`📋 Order marked as paid via webhook: ${booking.id}`);
+    }
+
+  } catch (error) {
+    console.error('❌ Error handling order.paid:', error);
+    throw error;
+  }
+}
+
+// Handle refund.created event
+async function handleRefundCreated(refund) {
+  try {
+    console.log(`💸 Processing refund.created: ${refund.id}`);
+    
+    // Find booking by payment_id and update status
+    const booking = confirmedBookings.find(b => b.paymentId === refund.payment_id);
+    
+    if (booking) {
+      booking.refundStatus = 'INITIATED';
+      booking.refundId = refund.id;
+      booking.refundAmount = refund.amount / 100;
+      booking.refundInitiatedAt = new Date();
+      
+      console.log(`💸 Refund initiated for booking: ${booking.id}`);
+    }
+
+  } catch (error) {
+    console.error('❌ Error handling refund.created:', error);
+    throw error;
+  }
+}
+
+// Handle refund.processed event
+async function handleRefundProcessed(refund) {
+  try {
+    console.log(`✅ Processing refund.processed: ${refund.id}`);
+    
+    // Find booking by refund_id and update status
+    const booking = confirmedBookings.find(b => b.refundId === refund.id);
+    
+    if (booking) {
+      booking.refundStatus = 'COMPLETED';
+      booking.refundProcessedAt = new Date();
+      booking.status = 'REFUNDED';
+      
+      console.log(`✅ Refund completed for booking: ${booking.id}`);
+    }
+
+  } catch (error) {
+    console.error('❌ Error handling refund.processed:', error);
+    throw error;
   }
 }
 

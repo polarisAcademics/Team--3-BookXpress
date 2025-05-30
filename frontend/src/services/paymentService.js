@@ -13,21 +13,10 @@ export const loadRazorpayScript = () => {
   });
 };
 
-// Get authentication headers
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('token');
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`
-  };
-};
-
 // Create Razorpay order
 export const createPaymentOrder = async (orderData) => {
   try {
-    const response = await axios.post(`${API_URL}/create-order`, orderData, {
-      headers: getAuthHeaders()
-    });
+    const response = await axios.post(`${API_URL}/create-order`, orderData);
     return response.data;
   } catch (error) {
     console.error('Error creating payment order:', error);
@@ -38,9 +27,7 @@ export const createPaymentOrder = async (orderData) => {
 // Verify payment
 export const verifyPayment = async (paymentData) => {
   try {
-    const response = await axios.post(`${API_URL}/verify-payment`, paymentData, {
-      headers: getAuthHeaders()
-    });
+    const response = await axios.post(`${API_URL}/verify-payment`, paymentData);
     return response.data;
   } catch (error) {
     console.error('Error verifying payment:', error);

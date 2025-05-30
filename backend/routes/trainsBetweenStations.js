@@ -5,8 +5,13 @@ import fetch from 'node-fetch';
 
 const router = express.Router();
 
+<<<<<<< HEAD
 // API Configuration
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
+=======
+// RapidAPI configuration
+const RAPIDAPI_KEY = 'ec516f3c6emsh37495040e73e766p1f6312jsna2f2fc4641b2';
+>>>>>>> parent of 1f18db2 (🚀 Major Booking System Overhaul & Bug Fixes - Fixed auth token storage, updated API keys, implemented complete MongoDB booking system with payment integration, enhanced UI components, added statistics dashboard, and improved error handling for production-ready booking flow)
 const RAPIDAPI_HOST = 'irctc1.p.rapidapi.com';
 
 // Mock train data for testing and fallback

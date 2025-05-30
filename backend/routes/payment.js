@@ -169,6 +169,142 @@ router.get('/bookings', async (req, res) => {
   }
 });
 
+// RazorpayX Webhook endpoint - handles only available events
+router.post('/webhook', express.json(), async (req, res) => {
+  try {
+    console.log('🔔 RazorpayX Webhook received');
+    console.log('📄 Event:', req.body.event);
+    console.log('📄 Payload:', JSON.stringify(req.body, null, 2));
+    
+    const { event, payload } = req.body;
+    
+    // Handle only the 4 available RazorpayX events
+    switch (event) {
+      case 'fund_account.validation.completed':
+        console.log('✅ Fund account validation completed');
+        // This indicates account is ready for transactions
+        break;
+        
+      case 'transaction.created':
+        console.log('💳 Transaction created - potential payment');
+        await handleTransactionCreated(payload);
+        break;
+        
+      case 'payout.processed':
+        console.log('✅ Payout processed - payment success indicator');
+        await handlePayoutProcessed(payload);
+        break;
+        
+      case 'payout.rejected':
+        console.log('❌ Payout rejected - payment failure indicator');
+        await handlePayoutRejected(payload);
+        break;
+        
+      default:
+        console.log(`ℹ️ Unhandled event: ${event}`);
+    }
+    
+    // Always respond with success
+    res.status(200).json({
+      status: 'success',
+      message: 'Webhook processed',
+      event: event
+    });
+    
+  } catch (error) {
+    console.error('❌ Webhook error:', error);
+    res.status(200).json({
+      status: 'error',
+      message: 'Webhook processed with error',
+      error: error.message
+    });
+  }
+});
+
+// Handle transaction.created event
+async function handleTransactionCreated(payload) {
+  try {
+    console.log('📋 Processing transaction.created');
+    
+    if (payload && payload.transaction && payload.transaction.entity) {
+      const transaction = payload.transaction.entity;
+      
+      // Create a simple booking record
+      const booking = {
+        id: generatePNR(),
+        transactionId: transaction.id,
+        amount: transaction.amount ? transaction.amount / 100 : 0,
+        currency: transaction.currency || 'INR',
+        status: 'PENDING',
+        createdAt: new Date(),
+        source: 'webhook_transaction'
+      };
+      
+      // Add to temporary storage (you can enhance this later)
+      confirmedBookings.push(booking);
+      console.log(`✅ Booking created from transaction: ${booking.id}`);
+    }
+    
+  } catch (error) {
+    console.error('❌ Error handling transaction.created:', error);
+  }
+}
+
+// Handle payout.processed event
+async function handlePayoutProcessed(payload) {
+  try {
+    console.log('✅ Processing payout.processed');
+    
+    if (payload && payload.payout && payload.payout.entity) {
+      const payout = payload.payout.entity;
+      
+      // Find and update booking status to success
+      const booking = confirmedBookings.find(b => 
+        b.transactionId === payout.reference_id || 
+        b.amount === (payout.amount / 100)
+      );
+      
+      if (booking) {
+        booking.status = 'CONFIRMED';
+        booking.payoutId = payout.id;
+        booking.updatedAt = new Date();
+        console.log(`✅ Booking confirmed: ${booking.id}`);
+      }
+    }
+    
+  } catch (error) {
+    console.error('❌ Error handling payout.processed:', error);
+  }
+}
+
+// Handle payout.rejected event
+async function handlePayoutRejected(payload) {
+  try {
+    console.log('❌ Processing payout.rejected');
+    
+    if (payload && payload.payout && payload.payout.entity) {
+      const payout = payload.payout.entity;
+      
+      // Find and update booking status to failed
+      const booking = confirmedBookings.find(b => 
+        b.transactionId === payout.reference_id || 
+        b.amount === (payout.amount / 100)
+      );
+      
+      if (booking) {
+        booking.status = 'FAILED';
+        booking.payoutId = payout.id;
+        booking.updatedAt = new Date();
+        booking.failureReason = payout.failure_reason || 'Payout rejected';
+        console.log(`❌ Booking failed: ${booking.id}`);
+      }
+    }
+    
+  } catch (error) {
+    console.error('❌ Error handling payout.rejected:', error);
+  }
+}
+
 // Helper function to generate PNR
 function generatePNR() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';

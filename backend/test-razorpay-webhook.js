@@ -165,7 +165,7 @@ async function testWebhook(eventType = 'paymentCaptured', url = 'http://localhos
   
   try {
     const body = JSON.stringify(event);
-    const webhookSecret = 'test_webhook_secret'; // Use your actual webhook secret
+    const webhookSecret = '12345678'; // Updated to match user's actual webhook secret
     const signature = generateWebhookSignature(body, webhookSecret);
     
     console.log(`🔐 Generated signature: ${signature}`);

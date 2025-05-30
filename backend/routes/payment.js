@@ -174,15 +174,23 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
   try {
     console.log('🔔 Razorpay Webhook received');
     
-    // Parse the webhook payload
-    const webhookBody = req.body.toString();
+    // Parse the webhook payload - handle both string and buffer
+    let webhookBody;
+    if (Buffer.isBuffer(req.body)) {
+      webhookBody = req.body.toString('utf8');
+    } else if (typeof req.body === 'string') {
+      webhookBody = req.body;
+    } else {
+      webhookBody = JSON.stringify(req.body);
+    }
+    
     const webhookSignature = req.headers['x-razorpay-signature'];
     
     console.log('📄 Webhook signature:', webhookSignature);
     console.log('📄 Webhook body:', webhookBody);
     
     // Verify webhook signature (optional but recommended)
-    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || '12345678';
     if (webhookSecret && webhookSignature) {
       const expectedSignature = crypto
         .createHmac('sha256', webhookSecret)
@@ -191,13 +199,22 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       
       if (expectedSignature !== webhookSignature) {
         console.log('❌ Webhook signature verification failed');
+        console.log('Expected:', expectedSignature);
+        console.log('Received:', webhookSignature);
         return res.status(400).json({ error: 'Invalid signature' });
       }
       console.log('✅ Webhook signature verified');
     }
     
     // Parse the JSON payload
-    const payload = JSON.parse(webhookBody);
+    let payload;
+    try {
+      payload = JSON.parse(webhookBody);
+    } catch (parseError) {
+      console.error('❌ JSON parsing error:', parseError.message);
+      return res.status(400).json({ error: 'Invalid JSON payload' });
+    }
+    
     const { event, payload: eventPayload } = payload;
     
     console.log(`📥 Webhook Event: ${event}`);

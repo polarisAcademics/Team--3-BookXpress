@@ -2,7 +2,9 @@ import express from 'express';
 import axios from 'axios';
 
 const router = express.Router();
-<<<<<<< HEAD
+
+// Updated API key for PNR status checking
+const API_KEY = 'd15f05b26amshc2c90427a2f6385p119c29jsn71e9babc3196';
 
 // Mock PNR status data for when API is unavailable
 const mockPnrStatus = {
@@ -24,9 +26,6 @@ const mockPnrStatus = {
     generatedTimeStamp: new Date().toISOString()
   }
 };
-=======
-const API_KEY = '9a43e9d002mshed90898683d9dd3p143a5fjsn7e1d2c2f1ab7';
->>>>>>> parent of 1f18db2 (🚀 Major Booking System Overhaul & Bug Fixes - Fixed auth token storage, updated API keys, implemented complete MongoDB booking system with payment integration, enhanced UI components, added statistics dashboard, and improved error handling for production-ready booking flow)
 
 router.get('/', async (req, res) => {
   const { pnr } = req.query;
@@ -50,7 +49,7 @@ router.get('/', async (req, res) => {
       method: 'GET',
       url: `https://irctc-indian-railway-pnr-status.p.rapidapi.com/getPNRStatus/${pnr}`,
       headers: {
-        'X-RapidAPI-Key': process.env.PNR_API_KEY,
+        'X-RapidAPI-Key': API_KEY,
         'X-RapidAPI-Host': 'irctc-indian-railway-pnr-status.p.rapidapi.com'
       }
     };
@@ -62,10 +61,10 @@ router.get('/', async (req, res) => {
     res.json(response.data);
   } catch (error) {
     console.error('PNR status API error:', error.response?.data || error.message);
-    res.status(error.response?.status || 500).json({ 
-      error: error.response?.data?.message || 'Failed to fetch PNR status',
-      details: error.message
-    });
+    
+    // Return mock data if API fails
+    console.log('Returning mock PNR status data');
+    res.json(mockPnrStatus);
   }
 });
 

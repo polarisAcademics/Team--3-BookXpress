@@ -17,11 +17,9 @@ const authenticate = async (req, res, next) => {
   }
   const token = authHeader.split(' ')[1];
   try {
-<<<<<<< HEAD
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-=======
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
->>>>>>> parent of 1f18db2 (🚀 Major Booking System Overhaul & Bug Fixes - Fixed auth token storage, updated API keys, implemented complete MongoDB booking system with payment integration, enhanced UI components, added statistics dashboard, and improved error handling for production-ready booking flow)
+
     req.userId = decoded.userId;
     next();
   } catch (err) {

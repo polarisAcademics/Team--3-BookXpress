@@ -2,8 +2,6 @@ import express from 'express';
 import axios from 'axios';
 
 const router = express.Router();
-<<<<<<< HEAD
-
 // Mock PNR status data for when API is unavailable
 const mockPnrStatus = {
   data: {
@@ -24,9 +22,7 @@ const mockPnrStatus = {
     generatedTimeStamp: new Date().toISOString()
   }
 };
-=======
 const API_KEY = '9a43e9d002mshed90898683d9dd3p143a5fjsn7e1d2c2f1ab7';
->>>>>>> parent of 1f18db2 (🚀 Major Booking System Overhaul & Bug Fixes - Fixed auth token storage, updated API keys, implemented complete MongoDB booking system with payment integration, enhanced UI components, added statistics dashboard, and improved error handling for production-ready booking flow)
 
 router.get('/', async (req, res) => {
   const { pnr } = req.query;

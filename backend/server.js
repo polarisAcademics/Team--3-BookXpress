@@ -60,7 +60,6 @@ app.use('/api/trains-between-stations', trainsBetweenStationsRoute);
 app.use('/api/stations', stationsRoute);
 
 // Protected routes (authentication required)
-app.use('/api/bookings', auth, bookingsRoute);
 app.use('/api/tickets', auth, ticketRoutes);
 app.use('/api/recent-searches', auth, recentSearchesRoute);
 

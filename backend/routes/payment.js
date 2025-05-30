@@ -1,17 +1,170 @@
 import express from 'express';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
+import Booking from '../models/booking.model.js';
+import mongoose from 'mongoose';
+import jwt from 'jsonwebtoken';
+import PDFDocument from 'pdfkit';
+import fs from 'fs';
+import path from 'path';
 
 // Temporary storage for bookings (in a real app, use a database)
 let confirmedBookings = [];
 
 const router = express.Router();
 
+// Authentication middleware
+const authenticate = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.userId = decoded.userId;
+      console.log('✅ Authenticated user:', req.userId);
+    } else {
+      req.userId = null;
+      console.log('⚠️ No authentication token provided');
+    }
+    next();
+  } catch (err) {
+    req.userId = null;
+    console.log('❌ Authentication failed:', err.message);
+    next();
+  }
+};
+
 // Initialize Razorpay instance
+console.log('🔑 Initializing Razorpay with:');
+console.log('KEY_ID:', process.env.RAZORPAY_KEY_ID || 'rzp_test_QJeBfRrPaUZCpx');
+console.log('KEY_SECRET:', process.env.RAZORPAY_KEY_SECRET ? 'Set' : 'Not set');
+
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_hwRfIuKJQudGqL',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || 'n3kpcHbWeiCBhZX9Wy4Rl1B5',
+  key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_QJeBfRrPaUZCpx',
+  key_secret: process.env.RAZORPAY_KEY_SECRET || 'yKFiRVMjAX6VnKbhfXVlA3vW',
 });
+
+// Function to generate PDF ticket and save it
+const generateTicketPDF = async (booking, mongoBooking) => {
+  return new Promise((resolve, reject) => {
+    try {
+      // Create uploads directory if it doesn't exist
+      const uploadsDir = path.join(process.cwd(), 'uploads', 'tickets');
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+
+      // Generate filename
+      const filename = `BookXpress_Ticket_${booking.pnr}.pdf`;
+      const filepath = path.join(uploadsDir, filename);
+
+      // Create PDF document
+      const doc = new PDFDocument({ margin: 50 });
+      
+      // Pipe to file
+      const stream = fs.createWriteStream(filepath);
+      doc.pipe(stream);
+
+      // Add BookXpress header
+      doc.fontSize(24)
+         .fillColor('#3b63f7')
+         .text('BookXpress', 50, 50);
+      
+      doc.fontSize(20)
+         .fillColor('#000000')
+         .text('Train Ticket', 50, 80);
+      
+      // Add a line separator
+      doc.moveTo(50, 110)
+         .lineTo(550, 110)
+         .stroke();
+      
+      // Booking Information
+      doc.fontSize(16)
+         .fillColor('#333333')
+         .text('Booking Information', 50, 130);
+      
+      doc.fontSize(12)
+         .fillColor('#000000')
+         .text(`PNR Number: ${booking.pnr}`, 50, 155)
+         .text(`Booking ID: ${mongoBooking._id}`, 50, 175)
+         .text(`Status: ${mongoBooking.status}`, 50, 195)
+         .text(`Booking Date: ${new Date().toLocaleDateString()}`, 50, 215);
+      
+      // Train Details
+      doc.fontSize(16)
+         .fillColor('#333333')
+         .text('Train Details', 50, 250);
+      
+      doc.fontSize(12)
+         .fillColor('#000000')
+         .text(`Train Name: ${mongoBooking.trainDetails.name}`, 50, 275)
+         .text(`Train Number: ${mongoBooking.trainDetails.trainId}`, 50, 295)
+         .text(`From: ${mongoBooking.trainDetails.fromStation}`, 50, 315)
+         .text(`To: ${mongoBooking.trainDetails.toStation}`, 50, 335)
+         .text(`Journey Date: ${new Date(mongoBooking.trainDetails.journeyDate).toLocaleDateString()}`, 50, 355)
+         .text(`Class: ${mongoBooking.trainDetails.selectedClass}`, 50, 375)
+         .text(`Departure: ${mongoBooking.trainDetails.departureTime}`, 50, 395)
+         .text(`Arrival: ${mongoBooking.trainDetails.arrivalTime}`, 50, 415);
+      
+      // Passenger Details
+      doc.fontSize(16)
+         .fillColor('#333333')
+         .text('Passenger Details', 50, 450);
+      
+      let yPosition = 475;
+      mongoBooking.passengers.forEach((passenger, index) => {
+        doc.fontSize(12)
+           .fillColor('#000000')
+           .text(`${index + 1}. ${passenger.name} (Age: ${passenger.age}, Gender: ${passenger.gender})`, 50, yPosition);
+        yPosition += 20;
+      });
+      
+      // Payment Information
+      yPosition += 20;
+      doc.fontSize(16)
+         .fillColor('#333333')
+         .text('Payment Information', 50, yPosition);
+      
+      yPosition += 25;
+      doc.fontSize(12)
+         .fillColor('#000000')
+         .text(`Total Amount: ₹${mongoBooking.totalFare}`, 50, yPosition)
+         .text(`Payment ID: ${mongoBooking.paymentDetails.transactionId}`, 50, yPosition + 20)
+         .text(`Payment Status: ${mongoBooking.paymentDetails.status}`, 50, yPosition + 40)
+         .text(`Payment Date: ${new Date(mongoBooking.paymentDetails.paymentDate).toLocaleDateString()}`, 50, yPosition + 60);
+      
+      // Add footer
+      yPosition += 120;
+      doc.fontSize(10)
+         .fillColor('#666666')
+         .text('Thank you for choosing BookXpress!', 50, yPosition)
+         .text('For support, contact us at support@bookxpress.com', 50, yPosition + 15)
+         .text('This is a computer-generated ticket. Please carry this along with a valid ID proof.', 50, yPosition + 30);
+      
+      // Add QR code placeholder
+      doc.rect(450, 130, 100, 100)
+         .stroke();
+      doc.fontSize(10)
+         .text('QR Code', 485, 175);
+      
+      // Finalize the PDF
+      doc.end();
+
+      // Wait for the stream to finish
+      stream.on('finish', () => {
+        resolve(`/uploads/tickets/${filename}`);
+      });
+
+      stream.on('error', (error) => {
+        reject(error);
+      });
+
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
 
 // Create Razorpay order
 router.post('/create-order', async (req, res) => {
@@ -43,7 +196,7 @@ router.post('/create-order', async (req, res) => {
 });
 
 // Verify payment and create booking
-router.post('/verify-payment', async (req, res) => {
+router.post('/verify-payment', authenticate, async (req, res) => {
   try {
     const {
       razorpay_order_id,
@@ -88,9 +241,69 @@ router.post('/verify-payment', async (req, res) => {
       travelDate: bookingData.travelDate,
     };
 
-    // Store the booking in our temporary array
-    // In a real app, you would save this to your database
+    // Store the booking in our temporary array (for backward compatibility)
     confirmedBookings.push(booking);
+    
+    // Also save to MongoDB database for My Bookings functionality
+    try {
+      const mongoBooking = new Booking({
+        userId: req.userId ? new mongoose.Types.ObjectId(req.userId) : new mongoose.Types.ObjectId(), // Use authenticated user ID
+        trainDetails: {
+          trainId: bookingData.train.id || bookingData.train.trainNumber || '12951',
+          name: bookingData.train.name || 'Train Booking',
+          number: bookingData.train.trainNumber || bookingData.train.id || '12951',
+          fromStation: bookingData.train.from || 'Unknown',
+          toStation: bookingData.train.to || 'Unknown',
+          journeyDate: new Date(bookingData.travelDate || '2025-05-30'),
+          departureTime: bookingData.train.departure || '16:55',
+          arrivalTime: bookingData.train.arrival || '08:35',
+          selectedClass: bookingData.selectedClass || '3A'
+        },
+        passengers: bookingData.passengers.map(p => ({
+          name: p.name,
+          age: p.age,
+          gender: p.gender,
+          seatNumber: null
+        })),
+        totalFare: bookingData.totalAmount,
+        paymentDetails: {
+          transactionId: razorpay_payment_id,
+          paymentGateway: 'Razorpay',
+          amount: bookingData.totalAmount,
+          currency: 'INR',
+          status: 'SUCCESSFUL',
+          paymentDate: new Date()
+        },
+        status: 'CONFIRMED',
+        pnrNumber: booking.pnr
+      });
+
+      await mongoBooking.save();
+      console.log('✅ Booking saved to MongoDB for user:', req.userId, 'Booking ID:', mongoBooking._id);
+      
+      // Add MongoDB ID to response
+      booking.mongoId = mongoBooking._id;
+      
+      // Generate and save PDF ticket
+      try {
+        const ticketPDFUrl = await generateTicketPDF(booking, mongoBooking);
+        
+        // Update the booking with the PDF URL
+        mongoBooking.ticketPDFUrl = ticketPDFUrl;
+        await mongoBooking.save();
+        
+        booking.ticketPDF = ticketPDFUrl;
+        console.log('✅ PDF ticket generated and saved:', ticketPDFUrl);
+        
+      } catch (pdfError) {
+        console.error('❌ Error generating PDF ticket:', pdfError);
+        // Don't fail the booking if PDF generation fails
+      }
+      
+    } catch (mongoError) {
+      console.error('❌ Error saving to MongoDB:', mongoError);
+      // Don't fail the entire request if MongoDB save fails
+    }
     
     res.json({
       success: true,
@@ -310,6 +523,49 @@ async function handlePaymentCaptured(payment) {
       
       confirmedBookings.push(newBooking);
       console.log(`✅ New booking created from webhook: ${newBooking.id}`);
+      
+      // Also save to MongoDB for My Bookings functionality
+      try {
+        const mongoBooking = new Booking({
+          userId: new mongoose.Types.ObjectId(), // Create a placeholder ObjectId for webhook bookings
+          trainDetails: {
+            trainId: payment.notes?.trainNumber || payment.order_id,
+            name: payment.notes?.trainName || 'Train Booking via Webhook',
+            number: payment.notes?.trainNumber || '12951',
+            fromStation: payment.notes?.from || 'NEW DELHI',
+            toStation: payment.notes?.to || 'CHHATRAPATI SHIVAJI TERMINUS',
+            journeyDate: new Date(payment.notes?.journeyDate || '2025-05-30'),
+            departureTime: payment.notes?.departureTime || '16:55',
+            arrivalTime: payment.notes?.arrivalTime || '08:35',
+            selectedClass: payment.notes?.class || '3A'
+          },
+          passengers: [
+            {
+              name: payment.notes?.passengerName || 'Webhook Passenger',
+              age: parseInt(payment.notes?.passengerAge) || 25,
+              gender: payment.notes?.passengerGender || 'Male',
+              seatNumber: null
+            }
+          ],
+          totalFare: payment.amount / 100,
+          paymentDetails: {
+            transactionId: payment.id,
+            paymentGateway: 'Razorpay',
+            amount: payment.amount / 100,
+            currency: payment.currency,
+            status: 'SUCCESSFUL',
+            paymentDate: new Date(payment.created_at * 1000)
+          },
+          status: 'CONFIRMED',
+          pnrNumber: newBooking.id
+        });
+
+        await mongoBooking.save();
+        console.log('✅ Webhook booking saved to MongoDB:', mongoBooking._id);
+        
+      } catch (mongoError) {
+        console.error('❌ Error saving webhook booking to MongoDB:', mongoError);
+      }
     }
 
   } catch (error) {

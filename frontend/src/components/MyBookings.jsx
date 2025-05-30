@@ -6,6 +6,7 @@ function MyBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [downloadingPdf, setDownloadingPdf] = useState(null);
 
   useEffect(() => {
     fetchBookings();
@@ -13,51 +14,83 @@ function MyBookings() {
 
   const fetchBookings = async () => {
     try {
-      // TODO: Implement API call to fetch bookings
-      const response = await fetch('/api/bookings', {
+      console.log('🔍 Fetching bookings...');
+      const token = localStorage.getItem('token');
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      
+      console.log('📡 API Base URL:', API_BASE_URL);
+      console.log('🔐 Token:', token ? 'Present' : 'Missing');
+
+      // Use the correct endpoint for My Bookings
+      const response = await fetch(`${API_BASE_URL}/api/bookings/my-bookings`, {
+        method: 'GET',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
       });
 
+      console.log('📥 Response status:', response.status);
       const data = await response.json();
+      console.log('📋 Response data:', data);
 
       if (!response.ok) {
         throw new Error(data.message || 'Failed to fetch bookings');
       }
 
-      setBookings(data.bookings);
+      // Handle both array and object responses
+      const bookingsArray = Array.isArray(data) ? data : (data.bookings || []);
+      console.log('✅ Bookings found:', bookingsArray.length);
+      
+      setBookings(bookingsArray);
     } catch (err) {
+      console.error('❌ Error fetching bookings:', err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCancelBooking = async (bookingId) => {
-    if (!window.confirm('Are you sure you want to cancel this booking?')) {
-      return;
-    }
-
+  const handleDownloadTicketPdf = async (bookingId, pnr) => {
+    setDownloadingPdf(bookingId);
     try {
-      // TODO: Implement API call to cancel booking
-      const response = await fetch(`/api/bookings/${bookingId}/cancel`, {
-        method: 'POST',
+      const token = localStorage.getItem('token');
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      
+      const response = await fetch(`${API_BASE_URL}/api/bookings/${bookingId}/download-ticket`, {
+        method: 'GET',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to cancel booking');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to download ticket PDF');
       }
 
-      // Refresh bookings list
-      fetchBookings();
+      // Get the PDF as a blob
+      const blob = await response.blob();
+      
+      // Create a download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `BookXpress_Ticket_${pnr}.pdf`;
+      
+      // Trigger the download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up the URL object
+      window.URL.revokeObjectURL(url);
+      
     } catch (err) {
-      setError(err.message);
+      console.error('❌ Error downloading ticket PDF:', err);
+      alert(`Failed to download ticket PDF: ${err.message}`);
+    } finally {
+      setDownloadingPdf(null);
     }
   };
 
@@ -102,8 +135,8 @@ function MyBookings() {
                   </div>
                   <div className="text-right">
                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                      booking.status === 'Confirmed' ? 'bg-green-500/10 text-green-500' :
-                      booking.status === 'Waiting' ? 'bg-yellow-500/10 text-yellow-500' :
+                      booking.status === 'Confirmed' || booking.status === 'CONFIRMED' ? 'bg-green-500/10 text-green-500' :
+                      booking.status === 'Waiting' || booking.status === 'PENDING_PAYMENT' ? 'bg-yellow-500/10 text-yellow-500' :
                       'bg-red-500/10 text-red-500'
                     }`}>
                       {booking.status}
@@ -135,7 +168,7 @@ function MyBookings() {
                     <div>
                       <p className="text-theme-secondary text-sm mb-1">Passengers</p>
                       <div className="flex flex-wrap gap-2">
-                        {booking.passengers.map((passenger, index) => (
+                        {booking.passengers && booking.passengers.map((passenger, index) => (
                           <span
                             key={index}
                             className="inline-flex items-center px-3 py-1 rounded-lg bg-theme-secondary text-theme-primary text-sm"
@@ -146,14 +179,25 @@ function MyBookings() {
                         ))}
                       </div>
                     </div>
-                    {booking.status !== 'Cancelled' && (
-                      <button
-                        onClick={() => handleCancelBooking(booking.id)}
-                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-                      >
-                        Cancel Booking
-                      </button>
-                    )}
+                    
+                    {/* Download Ticket PDF Button - Green Color */}
+                    <button
+                      onClick={() => handleDownloadTicketPdf(booking.id, booking.pnr)}
+                      disabled={downloadingPdf === booking.id}
+                      className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-2"
+                    >
+                      {downloadingPdf === booking.id ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                          Downloading...
+                        </>
+                      ) : (
+                        <>
+                          <i className="fas fa-download"></i>
+                          Download Ticket PDF
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
               </div>

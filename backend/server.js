@@ -19,7 +19,15 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-dotenv.config();
+// Load environment variables
+dotenv.config({ path: path.join(__dirname, '.env') });
+
+// Debug: Log environment variables
+console.log('Environment Variables:');
+console.log('PNR_API_KEY exists:', !!process.env.PNR_API_KEY);
+console.log('PNR_API_KEY length:', process.env.PNR_API_KEY?.length);
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('PORT:', process.env.PORT);
 
 const app = express();
 

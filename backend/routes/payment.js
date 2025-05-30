@@ -412,8 +412,6 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       
       if (expectedSignature !== webhookSignature) {
         console.log('❌ Webhook signature verification failed');
-        console.log('Expected:', expectedSignature);
-        console.log('Received:', webhookSignature);
         return res.status(400).json({ error: 'Invalid signature' });
       }
       console.log('✅ Webhook signature verified');
